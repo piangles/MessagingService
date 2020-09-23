@@ -19,10 +19,13 @@ public class ControlChannelServiceImpl implements ControlChannelService
 		controlChannelDAO = new ControlChannelDAOImpl();
 	}
 	
+	/**
+	 * All topics here are to be log compacted
+	 */
 	@Override
-	public List<String> getTopicsFor(String userId) throws ControlChannelException
+	public List<Topic> getTopicsFor(String userId) throws ControlChannelException
 	{
-		List<String> topics = null;
+		List<Topic> topics = null;
 		logger.info("Retriving topics for user: "+userId);
 		try
 		{
@@ -36,10 +39,13 @@ public class ControlChannelServiceImpl implements ControlChannelService
 		return topics;
 	}
 
+	/**
+	 * Should all topics here be log compacted????
+	 */
 	@Override
-	public List<String> getTopicsForAliases(List<String> aliases) throws ControlChannelException
+	public List<Topic> getTopicsForAliases(List<String> aliases) throws ControlChannelException
 	{
-		List<String> topics = null;
+		List<Topic> topics = null;
 		logger.info("Retriving topics for aliases: "+aliases);
 		try
 		{
@@ -54,6 +60,13 @@ public class ControlChannelServiceImpl implements ControlChannelService
 	}
 
 
+	/**
+	 * The only time fanOut is to be called is when changes to Key element(s)
+	 * of an Entity result in either and Subscription or Unsubcription.
+	 * 
+	 * 	// Users can delete messages entirely by writing a so-called tombstone message with null-value for a specific key.
+
+	 */
 	@Override
 	public void fanOut(FanoutRequest fanoutRequest) throws ControlChannelException
 	{
