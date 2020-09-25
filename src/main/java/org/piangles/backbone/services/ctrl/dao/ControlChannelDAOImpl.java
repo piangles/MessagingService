@@ -7,7 +7,7 @@ import org.piangles.core.dao.DAOException;
 import org.piangles.core.dao.rdbms.AbstractDAO;
 import org.piangles.core.resources.ResourceManager;
 
-import com.TBD.backbone.services.config.DefaultConfigProvider;
+import org.piangles.backbone.services.config.DefaultConfigProvider;
 
 public class ControlChannelDAOImpl extends AbstractDAO implements ControlChannelDAO
 {

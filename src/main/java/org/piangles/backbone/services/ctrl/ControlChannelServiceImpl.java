@@ -6,8 +6,8 @@ import org.piangles.backbone.services.ctrl.dao.ControlChannelDAO;
 import org.piangles.backbone.services.ctrl.dao.ControlChannelDAOImpl;
 import org.piangles.core.dao.DAOException;
 
-import com.TBD.backbone.services.Locator;
-import com.TBD.backbone.services.logging.LoggingService;
+import org.piangles.backbone.services.Locator;
+import org.piangles.backbone.services.logging.LoggingService;
 
 public class ControlChannelServiceImpl implements ControlChannelService
 {
