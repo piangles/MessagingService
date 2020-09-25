@@ -1,12 +1,13 @@
-package com.TBD.backbone.services.ctrl.dao;
+package org.piangles.backbone.services.ctrl.dao;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.TBD.backbone.services.config.DefaultConfigProvider;
-import com.TBD.core.dao.DAOException;
-import com.TBD.core.dao.rdbms.AbstractDAO;
-import com.TBD.core.resources.ResourceManager;
+import org.piangles.core.dao.DAOException;
+import org.piangles.core.dao.rdbms.AbstractDAO;
+import org.piangles.core.resources.ResourceManager;
+
+import org.piangles.backbone.services.config.DefaultConfigProvider;
 
 public class ControlChannelDAOImpl extends AbstractDAO implements ControlChannelDAO
 {

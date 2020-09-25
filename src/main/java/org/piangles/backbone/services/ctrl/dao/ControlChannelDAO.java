@@ -1,9 +1,9 @@
-package com.TBD.backbone.services.ctrl.dao;
+package org.piangles.backbone.services.ctrl.dao;
 
 import java.util.List;
 
-import com.TBD.backbone.services.ctrl.Topic;
-import com.TBD.core.dao.DAOException;
+import org.piangles.backbone.services.ctrl.Topic;
+import org.piangles.core.dao.DAOException;
 
 public interface ControlChannelDAO
 {
