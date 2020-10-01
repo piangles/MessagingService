@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.piangles.backbone.services.config.DefaultConfigProvider;
-import org.piangles.backbone.services.ctrl.Topic;
+import org.piangles.backbone.services.msg.Topic;
 import org.piangles.core.dao.DAOException;
 import org.piangles.core.dao.rdbms.AbstractDAO;
 import org.piangles.core.resources.ResourceManager;

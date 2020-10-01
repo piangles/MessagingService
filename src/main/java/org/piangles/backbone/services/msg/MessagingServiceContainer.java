@@ -22,7 +22,7 @@ public class MessagingServiceContainer extends AbstractContainer
 
 	public MessagingServiceContainer()
 	{
-		super("ControlChannelService");
+		super("MessagingService");
 	}
 	
 	@Override
