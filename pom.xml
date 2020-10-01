@@ -2,7 +2,7 @@
 		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.piangles.backbone.services</groupId>
-	<artifactId>ControlChannelService</artifactId>
+	<artifactId>MessagingService</artifactId>
 	<packaging>jar</packaging>
 	<version>0.1</version>
 
@@ -52,7 +52,7 @@
 	</distributionManagement>
 
 	<build>
-		<finalName>ControlChannelService</finalName>
+		<finalName>MessagingService</finalName>
 		
 		<extensions>
 			<extension>
@@ -90,7 +90,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>org.piangles.backbone.services.ctrl.ControlChannelServiceContainer</mainClass>
+							<mainClass>org.piangles.backbone.services.ctrl.MessagingServiceContainer</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -111,13 +111,13 @@
 							<artifactItems>
 								<artifactItem>
 									<groupId>org.piangles.backbone.services</groupId>
-									<artifactId>ControlChannelService</artifactId>
+									<artifactId>MessagingService</artifactId>
 									<version>0.1</version>
 									<type>jar</type>
 									<classifier>jar-with-dependencies</classifier>
 									<overWrite>true</overWrite>
 									<outputDirectory>../Export</outputDirectory>
-									<destFileName>ControlChannelService.jar</destFileName>
+									<destFileName>MessagingService.jar</destFileName>
 								</artifactItem>
 							</artifactItems>
 						</configuration>

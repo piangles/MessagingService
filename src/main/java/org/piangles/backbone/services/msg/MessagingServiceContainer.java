@@ -1,14 +1,14 @@
-package org.piangles.backbone.services.ctrl;
+package org.piangles.backbone.services.msg;
 
 import org.piangles.core.email.EmailSupport;
 import org.piangles.core.services.remoting.AbstractContainer;
 import org.piangles.core.services.remoting.ContainerException;
 
-public class ControlChannelServiceContainer extends AbstractContainer
+public class MessagingServiceContainer extends AbstractContainer
 {
 	public static void main(String[] args)
 	{
-		ControlChannelServiceContainer container = new ControlChannelServiceContainer();
+		MessagingServiceContainer container = new MessagingServiceContainer();
 		try
 		{
 			container.performSteps();
@@ -20,7 +20,7 @@ public class ControlChannelServiceContainer extends AbstractContainer
 		}
 	}
 
-	public ControlChannelServiceContainer()
+	public MessagingServiceContainer()
 	{
 		super("ControlChannelService");
 	}
@@ -31,7 +31,7 @@ public class ControlChannelServiceContainer extends AbstractContainer
 		Object service = null;
 		try
 		{
-			service = new ControlChannelServiceImpl();
+			service = new MessagingServiceImpl();
 		}
 		catch (Exception e)
 		{

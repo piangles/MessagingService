@@ -1,23 +1,27 @@
-package org.piangles.backbone.services.ctrl;
+package org.piangles.backbone.services.msg;
 
 import java.util.List;
 
-import org.piangles.backbone.services.ctrl.dao.ControlChannelDAO;
-import org.piangles.backbone.services.ctrl.dao.ControlChannelDAOImpl;
+import org.piangles.backbone.services.ctrl.ControlChannelException;
+import org.piangles.backbone.services.ctrl.ControlChannelService;
+import org.piangles.backbone.services.ctrl.FanoutRequest;
+import org.piangles.backbone.services.ctrl.Topic;
 import org.piangles.core.dao.DAOException;
 
 import org.piangles.backbone.services.Locator;
 import org.piangles.backbone.services.logging.LoggingService;
+import org.piangles.backbone.services.msg.dao.MessagingDAO;
+import org.piangles.backbone.services.msg.dao.MessagingDAOImpl;
 
-public class ControlChannelServiceImpl implements ControlChannelService
+public class MessagingServiceImpl implements ControlChannelService
 {
 	private LoggingService logger = Locator.getInstance().getLoggingService();
 	
-	private ControlChannelDAO controlChannelDAO;
+	private MessagingDAO controlChannelDAO;
 	
-	public ControlChannelServiceImpl() throws Exception
+	public MessagingServiceImpl() throws Exception
 	{
-		controlChannelDAO = new ControlChannelDAOImpl();
+		controlChannelDAO = new MessagingDAOImpl();
 	}
 	
 	/**
@@ -71,7 +75,6 @@ public class ControlChannelServiceImpl implements ControlChannelService
 	@Override
 	public void fanOut(FanoutRequest fanoutRequest) throws ControlChannelException
 	{
-		// TODO Auto-generated method stub
-		
+		//Convert FanoutRequest to ControlMessage
 	}
 }
