@@ -29,9 +29,9 @@ public class MessagingServiceImpl implements MessagingService
 		KafkaMessagingSystem kms = ResourceManager.getInstance().getKafkaMessagingSystem(new DefaultConfigProvider("MessagingService", COMPONENT_ID));
 		kafkaProducer = kms.createProducer();
 
-		Message message = new Message("1", new ControlDetails("Hello World", Action.Add, "This is the content"));
-		FanoutRequest fanoutRequest = new FanoutRequest(EntityIdType.Topic, message);
-		fanoutRequest.getEntityIds().add("com.TBD.playground");
+		Message message = new Message("1(This is specific to app)", new ControlDetails("Hello World", Action.Add, "This is the content"));
+		FanoutRequest fanoutRequest = new FanoutRequest(DistributionListType.Entity, "UserId", message);
+		fanoutRequest.getDistributionList().add("7014b086");
 		fanOut(fanoutRequest);
 	}
 
@@ -39,13 +39,13 @@ public class MessagingServiceImpl implements MessagingService
 	 * All topics here are to be log compacted
 	 */
 	@Override
-	public List<Topic> getTopicsFor(String userId) throws MessagingException
+	public List<Topic> getTopicsForUser(String userId) throws MessagingException
 	{
 		List<Topic> topics = null;
 		logger.info("Retriving topics for user: " + userId);
 		try
 		{
-			topics = messagingDAO.retrieveTopicsForUser(userId);
+			topics = messagingDAO.retrieveTopicsForEntity("UserId", userId);
 		}
 		catch (DAOException e)
 		{
@@ -87,16 +87,18 @@ public class MessagingServiceImpl implements MessagingService
 		{
 		case Alias:
 			topics = getTopicsForAliases(fanoutRequest.getDistributionList());
-		case Topic:
+		case Topic: //In this case the Custom Partioniner will kick in
 			topics = fanoutRequest.getDistributionList().stream().map(topicStr -> new Topic(topicStr)).collect(Collectors.toList());
 		case Entity:
-			//1 - using the list of entities get all the topics
-			//2 - 
-			topics = null;
-		default:
-			topics = null;
-			logger.info("Invalid");
-			return;
+			try
+			{
+				topics = messagingDAO.retrieveTopicsForEntities(fanoutRequest.getEntityType(), fanoutRequest.getDistributionList());
+			}
+			catch (DAOException e)
+			{
+				logger.error("Error retrieveTopicsForEntities : ", e);
+				throw new MessagingException(e);
+			}
 		}
 
 		Message message = fanoutRequest.getMessage();
@@ -112,24 +114,23 @@ public class MessagingServiceImpl implements MessagingService
 		}
 		final String messageAsString = msgAsString;
 		topics.parallelStream().forEach(topic -> {
-				
-				String actualKey = message.getPrimaryKey();//Sent by from the caller
-				String mappedKey = null; //Mapped PartitionNo from the Table
-				
-				ProducerRecord<String, String> record = new ProducerRecord<>(
-															topic.getTopicName(), 
-															mappedPrimaryKey,
-															messageAsString);
-				
-				kafkaProducer.send(record, (metaData, expt) -> {
-					if (expt != null)
-					{
-						logger.error("Unable to send Message.", expt);
-					}
-					else
-					{
-						System.out.println(">>>>>>>>>>>>>>>" + metaData.partition());
-					}
+			ProducerRecord<String, String> record = null;
+			if (topic.isPartioned())
+			{
+				record = new ProducerRecord<>(topic.getTopicName(),topic.getPartition(),
+						message.getPrimaryKey(),messageAsString);
+			}
+			else
+			{
+				record = new ProducerRecord<>(topic.getTopicName(),
+						message.getPrimaryKey(),messageAsString);
+			}
+			
+			kafkaProducer.send(record, (metaData, expt) -> {
+				if (expt != null)
+				{
+					logger.error("Unable to send Message.", expt);
+				}
 			});
 		});
 	}
