@@ -17,7 +17,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 	private static final String GET_TOPICS_FOR_ALIASES_SP = "Backbone.GetTopicsForAliases";
 
 	private static final String TOPIC = "Topic";
-	private static final String PARTITION = "Partition";
+	private static final String PARTITION = "PartitionNo";
 
 	public MessagingDAOImpl() throws Exception
 	{
@@ -46,7 +46,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 	{
 		List<Topic> topics = new ArrayList<>();
 
-		super.executeSPQueryProcessIndividual(GET_TOPICS_FOR_ENTITIES_SP, 1, (call) -> {
+		super.executeSPQueryProcessIndividual(GET_TOPICS_FOR_ENTITIES_SP, 2, (call) -> {
 			call.setString(1, entityType);
 			call.setString(2, String.join(",", entityIds));
 		}, (rs) -> {

@@ -28,11 +28,6 @@ public class MessagingServiceImpl implements MessagingService
 		messagingDAO = new MessagingDAOImpl();
 		KafkaMessagingSystem kms = ResourceManager.getInstance().getKafkaMessagingSystem(new DefaultConfigProvider("MessagingService", COMPONENT_ID));
 		kafkaProducer = kms.createProducer();
-
-		Message message = new Message("1(This is specific to app)", new ControlDetails("Hello World", Action.Add, "This is the content"));
-		FanoutRequest fanoutRequest = new FanoutRequest(DistributionListType.Entity, "UserId", message);
-		fanoutRequest.getDistributionList().add("7014b086");
-		fanOut(fanoutRequest);
 	}
 
 	/**
@@ -93,6 +88,7 @@ public class MessagingServiceImpl implements MessagingService
 			try
 			{
 				topics = messagingDAO.retrieveTopicsForEntities(fanoutRequest.getEntityType(), fanoutRequest.getDistributionList());
+				System.out.println(">>>>>>>>>>>>>>>>" + topics);
 			}
 			catch (DAOException e)
 			{
