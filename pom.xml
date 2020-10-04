@@ -90,7 +90,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>org.piangles.backbone.services.ctrl.MessagingServiceContainer</mainClass>
+							<mainClass>org.piangles.backbone.services.msg.MessagingServiceContainer</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
