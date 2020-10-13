@@ -88,7 +88,6 @@ public class MessagingServiceImpl implements MessagingService
 			try
 			{
 				topics = messagingDAO.retrieveTopicsForEntities(fanoutRequest.getEntityType(), fanoutRequest.getDistributionList());
-				System.out.println(">>>>>>>>>>>>>>>>" + topics);
 			}
 			catch (DAOException e)
 			{
@@ -97,11 +96,11 @@ public class MessagingServiceImpl implements MessagingService
 			}
 		}
 
-		Message message = fanoutRequest.getMessage();
+		Event event = fanoutRequest.getEvent();
 		String msgAsString = null;
 		try
 		{
-			msgAsString = new String(JSON.getEncoder().encode(message));
+			msgAsString = new String(JSON.getEncoder().encode(event));
 		}
 		catch (Exception e)
 		{
@@ -114,12 +113,12 @@ public class MessagingServiceImpl implements MessagingService
 			if (topic.isPartioned())
 			{
 				record = new ProducerRecord<>(topic.getTopicName(),topic.getPartition(),
-						message.getPrimaryKey(),messageAsString);
+						event.getPrimaryKey(),messageAsString);
 			}
 			else
 			{
 				record = new ProducerRecord<>(topic.getTopicName(),
-						message.getPrimaryKey(),messageAsString);
+						event.getPrimaryKey(),messageAsString);
 			}
 			
 			kafkaProducer.send(record, (metaData, expt) -> {
