@@ -21,7 +21,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 
 	public MessagingDAOImpl() throws Exception
 	{
-		super.init(ResourceManager.getInstance().getRDBMSDataStore(new DefaultConfigProvider("ControlChannelService", COMPONENT_ID)));
+		super.init(ResourceManager.getInstance().getRDBMSDataStore(new DefaultConfigProvider("MessagingService", COMPONENT_ID)));
 	}
 
 	public List<Topic> retrieveTopicsForAliases(List<String> aliases) throws DAOException
