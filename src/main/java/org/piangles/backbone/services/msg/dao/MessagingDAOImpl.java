@@ -1,6 +1,5 @@
 package org.piangles.backbone.services.msg.dao;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,12 +25,10 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 
 	public List<Topic> retrieveTopicsForAliases(List<String> aliases) throws DAOException
 	{
-		List<Topic> topics = new ArrayList<>();
-
-		super.executeSPQueryProcessIndividual(GET_TOPICS_FOR_ALIASES_SP, 1, (call) -> {
+		List<Topic> topics = super.executeSPQueryList(GET_TOPICS_FOR_ALIASES_SP, 1, (call) -> {
 			call.setString(1, String.join(",", aliases));
 		}, (rs) -> {
-			topics.add(new Topic(rs.getString(TOPIC), rs.getInt(PARTITION)));
+			return new Topic(rs.getString(TOPIC), rs.getInt(PARTITION));
 		});
 
 		return topics;
@@ -44,13 +41,11 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 	
 	public List<Topic> retrieveTopicsForEntities(String entityType, List<String> entityIds) throws DAOException
 	{
-		List<Topic> topics = new ArrayList<>();
-
-		super.executeSPQueryProcessIndividual(GET_TOPICS_FOR_ENTITIES_SP, 2, (call) -> {
+		List<Topic> topics = super.executeSPQueryList(GET_TOPICS_FOR_ENTITIES_SP, 2, (call) -> {
 			call.setString(1, entityType);
 			call.setString(2, String.join(",", entityIds));
 		}, (rs) -> {
-			topics.add(new Topic(rs.getString(TOPIC), rs.getInt(PARTITION)));
+			return new Topic(rs.getString(TOPIC), rs.getInt(PARTITION));
 		});
 
 		return topics;
