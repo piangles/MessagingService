@@ -27,7 +27,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 	{
 		List<Topic> topics = super.executeSPQueryList(GET_TOPICS_FOR_ALIASES_SP, 1, (call) -> {
 			call.setString(1, String.join(",", aliases));
-		}, (rs) -> {
+		}, (rs, call) -> {
 			return new Topic(rs.getString(TOPIC), rs.getInt(PARTITION));
 		});
 
@@ -44,7 +44,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 		List<Topic> topics = super.executeSPQueryList(GET_TOPICS_FOR_ENTITIES_SP, 2, (call) -> {
 			call.setString(1, entityType);
 			call.setString(2, String.join(",", entityIds));
-		}, (rs) -> {
+		}, (rs, call) -> {
 			return new Topic(rs.getString(TOPIC), rs.getInt(PARTITION));
 		});
 
