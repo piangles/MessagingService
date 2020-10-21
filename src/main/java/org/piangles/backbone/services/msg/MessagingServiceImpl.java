@@ -77,7 +77,7 @@ public class MessagingServiceImpl implements MessagingService
 	@Override
 	public void fanOut(FanoutRequest fanoutRequest) throws MessagingException
 	{
-		logger.info("FanRequest for Distribution Type:" + fanoutRequest.getDistributionListType() + "  and List:" + fanoutRequest.getDistributionList());
+		logger.info("FanoutRequest for Distribution Type:" + fanoutRequest.getDistributionListType() + "  and List:" + fanoutRequest.getDistributionList());
 		List<Topic> topics = null;
 		switch (fanoutRequest.getDistributionListType())
 		{
@@ -99,7 +99,19 @@ public class MessagingServiceImpl implements MessagingService
 			}
 			break;
 		}
-		Event event = fanoutRequest.getEvent();
+		
+		if (topics != null)
+		{
+			fanOut(topics, fanoutRequest.getEvent());
+		}
+		else
+		{
+			logger.warn("Topics could not be resolved for FanoutRequest Distribution Type:" + fanoutRequest.getDistributionListType() + "  and List:" + fanoutRequest.getDistributionList());
+		}
+	}
+	
+	private void fanOut(List<Topic> topics, Event event) throws MessagingException
+	{
 		String msgAsString = null;
 		try
 		{
