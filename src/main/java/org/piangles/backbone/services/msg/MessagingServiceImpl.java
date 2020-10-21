@@ -77,13 +77,16 @@ public class MessagingServiceImpl implements MessagingService
 	@Override
 	public void fanOut(FanoutRequest fanoutRequest) throws MessagingException
 	{
+		logger.info("FanRequest for Distribution Type:" + fanoutRequest.getDistributionListType() + "  and List:" + fanoutRequest.getDistributionList());
 		List<Topic> topics = null;
 		switch (fanoutRequest.getDistributionListType())
 		{
 		case Alias:
 			topics = getTopicsForAliases(fanoutRequest.getDistributionList());
+			break;
 		case Topic: //In this case the Custom Partioniner will kick in
 			topics = fanoutRequest.getDistributionList().stream().map(topicStr -> new Topic(topicStr)).collect(Collectors.toList());
+			break;
 		case Entity:
 			try
 			{
@@ -94,8 +97,8 @@ public class MessagingServiceImpl implements MessagingService
 				logger.error("Error retrieveTopicsForEntities : ", e);
 				throw new MessagingException(e);
 			}
+			break;
 		}
-
 		Event event = fanoutRequest.getEvent();
 		String msgAsString = null;
 		try
