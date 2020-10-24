@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.piangles.backbone.services.Locator;
-import org.piangles.backbone.services.config.DefaultConfigProvider;
 import org.piangles.backbone.services.logging.LoggingService;
 import org.piangles.backbone.services.msg.dao.MessagingDAO;
 import org.piangles.backbone.services.msg.dao.MessagingDAOImpl;
@@ -17,7 +16,6 @@ import org.piangles.core.util.coding.JSON;
 
 public class MessagingServiceImpl implements MessagingService
 {
-	private static final String COMPONENT_ID = "fd5f51bc-5a14-4675-9df4-982808bb106b";
 	private LoggingService logger = Locator.getInstance().getLoggingService();
 
 	private MessagingDAO messagingDAO = null;
@@ -26,7 +24,8 @@ public class MessagingServiceImpl implements MessagingService
 	public MessagingServiceImpl() throws Exception
 	{
 		messagingDAO = new MessagingDAOImpl();
-		KafkaMessagingSystem kms = ResourceManager.getInstance().getKafkaMessagingSystem(new DefaultConfigProvider("MessagingService", COMPONENT_ID));
+		KafkaMessagingSystem kms = ResourceManager.getInstance().getKafkaMessagingSystem(new MsgConfigProvider(
+																	messagingDAO.retrievePartitionerAlgorithmForTopics()));
 		kafkaProducer = kms.createProducer();
 	}
 
@@ -68,6 +67,19 @@ public class MessagingServiceImpl implements MessagingService
 			throw new MessagingException(e);
 		}
 		return topics;
+	}
+	
+	public void publish(String topic, Event event) throws MessagingException
+	{
+		final String eventAsStr = encodeEvent(event);
+		ProducerRecord<String, String> record = new ProducerRecord<>(topic, event.getPrimaryKey(),eventAsStr);
+
+		kafkaProducer.send(record, (metaData, expt) -> {
+			if (expt != null)
+			{
+				logger.error("Unable to publish Event.", expt);
+			}
+		});
 	}
 
 	/**
@@ -112,36 +124,43 @@ public class MessagingServiceImpl implements MessagingService
 	
 	private void fanOut(List<Topic> topics, Event event) throws MessagingException
 	{
-		String msgAsString = null;
+		final String eventAsStr = encodeEvent(event);
+		topics.parallelStream().forEach(topic -> {
+			ProducerRecord<String, String> record = null;
+			if (topic.isPartioned())
+			{
+				record = new ProducerRecord<>(topic.getTopicName(),topic.getPartition(),
+						event.getPrimaryKey(),eventAsStr);
+			}
+			else //CustomPartitioner will kick in and use the primaryKey to determine the Partition
+			{
+				record = new ProducerRecord<>(topic.getTopicName(),
+						event.getPrimaryKey(),eventAsStr);
+			}
+			
+			kafkaProducer.send(record, (metaData, expt) -> {
+				if (expt != null)
+				{
+					logger.error("Unable to fanOut Event.", expt);
+				}
+			});
+		});
+	}
+	
+	private String encodeEvent(Event event) throws MessagingException
+	{
+		String eventAsString = null;
+		
 		try
 		{
-			msgAsString = new String(JSON.getEncoder().encode(event));
+			eventAsString = new String(JSON.getEncoder().encode(event));
 		}
 		catch (Exception e)
 		{
 			logger.error("Unable to encode Message.", e);
 			throw new MessagingException(e);
 		}
-		final String messageAsString = msgAsString;
-		topics.parallelStream().forEach(topic -> {
-			ProducerRecord<String, String> record = null;
-			if (topic.isPartioned())
-			{
-				record = new ProducerRecord<>(topic.getTopicName(),topic.getPartition(),
-						event.getPrimaryKey(),messageAsString);
-			}
-			else
-			{
-				record = new ProducerRecord<>(topic.getTopicName(),
-						event.getPrimaryKey(),messageAsString);
-			}
-			
-			kafkaProducer.send(record, (metaData, expt) -> {
-				if (expt != null)
-				{
-					logger.error("Unable to send Message.", expt);
-				}
-			});
-		});
+		
+		return eventAsString;
 	}
 }

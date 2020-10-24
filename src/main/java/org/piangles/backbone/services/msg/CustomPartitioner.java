@@ -1,5 +1,7 @@
 package org.piangles.backbone.services.msg;
 
+import static org.piangles.backbone.services.msg.Constants.PARTITION_ALGORITHM;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,25 +13,26 @@ import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.producer.Partitioner;
 import org.apache.kafka.common.Cluster;
 import org.apache.kafka.common.KafkaFuture;
+import org.apache.kafka.common.utils.Utils;
 import org.piangles.backbone.services.Locator;
 import org.piangles.backbone.services.logging.LoggingService;
 
 public final class CustomPartitioner implements Partitioner
 {
 	private LoggingService logger = Locator.getInstance().getLoggingService();
-	private Map<String, ?> config = null;
-	private AdminClient client = null;
+	private Map<String, ?> kafkaConfig = null;
+	private AdminClient adminClient = null;
 	private Map<String, Integer> topicPartitionMap = null;
 	
 	@Override
 	public void configure(Map<String, ?> config)
 	{
-		this.config = config;
+		this.kafkaConfig = config;
 		
 		Properties props = new Properties();
 		props.putAll(config);
 		
- 		client = AdminClient.create(props);
+ 		adminClient = AdminClient.create(props);
 
  		topicPartitionMap = new HashMap<>();
 	}
@@ -39,24 +42,23 @@ public final class CustomPartitioner implements Partitioner
 	{
 		int partition;
 		
-		PartitionerAlgorithm alogrithm = PartitionerAlgorithm.Default;
-		try
+		PartitionerAlgorithm alogrithm = (PartitionerAlgorithm)kafkaConfig.get(PARTITION_ALGORITHM + topic);
+		if (alogrithm == null)
 		{
-			alogrithm = PartitionerAlgorithm.valueOf((String)config.get(topic));
+			System.out.println("***********");
+			alogrithm = PartitionerAlgorithm.Default;
 		}
-		catch (Exception e)
-		{
-			logger.info("Exception parsing the PartitionerAlgorithm : ", e);	
-		}
-		
 		switch (alogrithm)
 		{
 		case Deterministic:
 			partition = deterministicPartition(topic, key.toString());
+			break;
 		case Derived:
 			partition = derivedPartition(key.toString());
+			break;
 		default:
 			partition = 0;
+			break;
 		}
 		
 		return partition;
@@ -65,7 +67,7 @@ public final class CustomPartitioner implements Partitioner
 	@Override
 	public void close()
 	{
-		client.close();
+		adminClient.close();
 	}
 	
 	private int deterministicPartition(String topic, String key)
@@ -75,8 +77,7 @@ public final class CustomPartitioner implements Partitioner
 		Integer paritionCount = topicPartitionMap.get(topic);
 		if (paritionCount == null)
 		{
-			paritionCount = 0;
-	 		DescribeTopicsResult result = client.describeTopics(Arrays.asList(topic));
+	 		DescribeTopicsResult result = adminClient.describeTopics(Arrays.asList(topic));
 			Map<String, KafkaFuture<TopicDescription>>  values = result.values();
 			
 			KafkaFuture<TopicDescription> topicDescription = values.get(topic);
@@ -88,21 +89,14 @@ public final class CustomPartitioner implements Partitioner
 			}
 			catch (Exception e)
 			{
-				logger.error("Could not retrieve paritionCount : ", e);
+				paritionCount = 0;
+				logger.error("Could not retrieve paritionCount(Defaulting to 0) : ", e);
 			}
 		}
 
-		try
+		if (paritionCount != 0)
 		{
-			Integer keyInt = Integer.parseInt(key.toString());
-			if (paritionCount != 0)
-			{
-				partition = keyInt % paritionCount;
-			}
-		}
-		catch (NumberFormatException e)
-		{
-			logger.error("Could not parse Key into Integer, defaulting to 0 : " + key, e);
+			partition = Utils.toPositive(Utils.murmur2(key.getBytes())) % paritionCount;
 		}
 		
 		return partition;
@@ -118,7 +112,7 @@ public final class CustomPartitioner implements Partitioner
 		}
 		catch (NumberFormatException e)
 		{
-			logger.error("Could not parse Key into Integer, defaulting to 0 : " + key, e);
+			logger.error("Could not parse Key into Integer(Defaulting to 0) : " + key, e);
 		}
 		return partition;
 	}

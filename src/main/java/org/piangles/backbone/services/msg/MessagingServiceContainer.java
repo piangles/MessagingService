@@ -1,5 +1,7 @@
 package org.piangles.backbone.services.msg;
 
+import static org.piangles.backbone.services.msg.Constants.SERVICE_NAME;
+
 import org.piangles.core.email.EmailSupport;
 import org.piangles.core.services.remoting.AbstractContainer;
 import org.piangles.core.services.remoting.ContainerException;
@@ -22,7 +24,7 @@ public class MessagingServiceContainer extends AbstractContainer
 
 	public MessagingServiceContainer()
 	{
-		super("MessagingService");
+		super(SERVICE_NAME);
 	}
 	
 	@Override
