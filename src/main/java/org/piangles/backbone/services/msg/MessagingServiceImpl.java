@@ -73,7 +73,6 @@ public class MessagingServiceImpl implements MessagingService
 	{
 		final String eventAsStr = encodeEvent(event);
 		ProducerRecord<String, String> record = new ProducerRecord<>(topic, event.getPrimaryKey(),eventAsStr);
-
 		kafkaProducer.send(record, (metaData, expt) -> {
 			if (expt != null)
 			{

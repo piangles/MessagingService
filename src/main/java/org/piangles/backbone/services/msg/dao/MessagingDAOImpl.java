@@ -1,5 +1,7 @@
 package org.piangles.backbone.services.msg.dao;
 
+import static org.piangles.backbone.services.msg.Constants.PARTITION_ALGORITHM;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -29,14 +31,15 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 	}
 	
 	@Override
-	public Map<String, PartitionerAlgorithm> retrievePartitionerAlgorithmForTopics() throws DAOException
+	public Map<String, String> retrievePartitionerAlgorithmForTopics() throws DAOException
 	{
-		Map<String, PartitionerAlgorithm> topicAlgoMap = new HashMap<>();
+		Map<String, String> topicAlgoMap = new HashMap<>();
 		super.executeSPQueryList(GET_PARTITION_ALGORITHM_FOR_TOPICS_SP, (rs, call)->{
 			String topic = rs.getString(TOPIC);
 			String algorithm = rs.getString(PARTITIONER_ALGO);
-			
-			topicAlgoMap.put(topic, PartitionerAlgorithm.valueOf(algorithm));
+			//Ensures the DB value is compilant with the enumeration
+			PartitionerAlgorithm.valueOf(algorithm);
+			topicAlgoMap.put(PARTITION_ALGORITHM + topic, algorithm);
 			return null;
 		});
 		return topicAlgoMap;

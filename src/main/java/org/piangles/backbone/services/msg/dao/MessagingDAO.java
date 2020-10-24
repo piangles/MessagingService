@@ -3,13 +3,12 @@ package org.piangles.backbone.services.msg.dao;
 import java.util.List;
 import java.util.Map;
 
-import org.piangles.backbone.services.msg.PartitionerAlgorithm;
 import org.piangles.backbone.services.msg.Topic;
 import org.piangles.core.dao.DAOException;
 
 public interface MessagingDAO
 {
-	public Map<String, PartitionerAlgorithm> retrievePartitionerAlgorithmForTopics() throws DAOException;
+	public Map<String, String> retrievePartitionerAlgorithmForTopics() throws DAOException;
 	
 	public List<Topic> retrieveTopicsForEntity(String entityType, String entityId) throws DAOException;
 	
