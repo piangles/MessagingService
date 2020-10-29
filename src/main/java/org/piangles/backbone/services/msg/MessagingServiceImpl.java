@@ -1,6 +1,9 @@
 package org.piangles.backbone.services.msg;
 
+import static org.piangles.backbone.services.msg.Constants.PARTITION_ALGORITHM;
+
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -19,16 +22,30 @@ public class MessagingServiceImpl implements MessagingService
 	private LoggingService logger = Locator.getInstance().getLoggingService();
 
 	private MessagingDAO messagingDAO = null;
+	private Map<String, String> topicPartitionAlgoMap = null;
 	private KafkaProducer<String, String> kafkaProducer = null;
 
 	public MessagingServiceImpl() throws Exception
 	{
 		messagingDAO = new MessagingDAOImpl();
-		KafkaMessagingSystem kms = ResourceManager.getInstance().getKafkaMessagingSystem(new MsgConfigProvider(
-																	messagingDAO.retrievePartitionerAlgorithmForTopics()));
+		topicPartitionAlgoMap = messagingDAO.retrievePartitionerAlgorithmForTopics();
+		KafkaMessagingSystem kms = ResourceManager.getInstance().getKafkaMessagingSystem(new MsgConfigProvider(topicPartitionAlgoMap));
 		kafkaProducer = kms.createProducer();
 	}
 
+	@Override
+	public Topic getTopic(String topicName) throws MessagingException
+	{
+		logger.info("Retriving topic details for topic: " + topicName);
+		int partition = -1;
+		String paritionAlgoName = topicPartitionAlgoMap.get(PARTITION_ALGORITHM + topicName);
+		if (paritionAlgoName != null && PartitionerAlgorithm.valueOf(paritionAlgoName) == PartitionerAlgorithm.Default)
+		{
+			partition = 0;
+		}
+		return new Topic(topicName, partition);
+	}
+	
 	/**
 	 * All topics here are to be log compacted
 	 */
@@ -69,10 +86,10 @@ public class MessagingServiceImpl implements MessagingService
 		return topics;
 	}
 	
-	public void publish(String topic, Event event) throws MessagingException
+	public void publish(String topicName, Event event) throws MessagingException
 	{
 		final String eventAsStr = encodeEvent(event);
-		ProducerRecord<String, String> record = new ProducerRecord<>(topic, event.getPrimaryKey(),eventAsStr);
+		ProducerRecord<String, String> record = new ProducerRecord<>(topicName, event.getPrimaryKey(),eventAsStr);
 		kafkaProducer.send(record, (metaData, expt) -> {
 			if (expt != null)
 			{
@@ -95,7 +112,7 @@ public class MessagingServiceImpl implements MessagingService
 		case Alias:
 			topics = getTopicsForAliases(fanoutRequest.getDistributionList());
 			break;
-		case Topic: //In this case the Custom Partioniner will kick in
+		case Topic: //In this case the Custom Partioniner will kick in :TODO FanoutRequest -> Needs translation to actual Topic parameters???
 			topics = fanoutRequest.getDistributionList().stream().map(topicStr -> new Topic(topicStr)).collect(Collectors.toList());
 			break;
 		case Entity:
