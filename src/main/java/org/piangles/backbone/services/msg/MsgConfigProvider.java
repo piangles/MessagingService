@@ -11,9 +11,9 @@ import org.piangles.core.util.abstractions.AbstractConfigProvider;
 public class MsgConfigProvider extends AbstractConfigProvider
 {
 	private static final String COMPONENT_ID = "fd5f51bc-5a14-4675-9df4-982808bb106b";
-	private Map<String, String> partitionerAlgorithmForTopics = null;
+	private Map<String, PartitionerAlgorithm> partitionerAlgorithmForTopics = null;
 
-	public MsgConfigProvider(Map<String, String> partitionerAlgorithmForTopics)
+	public MsgConfigProvider(Map<String, PartitionerAlgorithm> partitionerAlgorithmForTopics)
 	{
 		super(SERVICE_NAME, COMPONENT_ID);
 		this.partitionerAlgorithmForTopics = partitionerAlgorithmForTopics;
@@ -24,7 +24,7 @@ public class MsgConfigProvider extends AbstractConfigProvider
 	{
 		Properties props = Locator.getInstance().getConfigService().getConfiguration(getComponentId()).getProperties();
 		partitionerAlgorithmForTopics.keySet().stream().forEach(key -> {
-			props.setProperty(key, partitionerAlgorithmForTopics.get(key).toString());
+			props.put(key, partitionerAlgorithmForTopics.get(key));
 		});
 		return props;
 	}

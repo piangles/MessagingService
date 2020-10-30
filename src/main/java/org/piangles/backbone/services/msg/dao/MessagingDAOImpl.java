@@ -31,15 +31,13 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 	}
 	
 	@Override
-	public Map<String, String> retrievePartitionerAlgorithmForTopics() throws DAOException
+	public Map<String, PartitionerAlgorithm> retrievePartitionerAlgorithmForTopics() throws DAOException
 	{
-		Map<String, String> topicAlgoMap = new HashMap<>();
+		Map<String, PartitionerAlgorithm> topicAlgoMap = new HashMap<>();
 		super.executeSPQueryList(GET_PARTITION_ALGORITHM_FOR_TOPICS_SP, (rs, call)->{
 			String topic = rs.getString(TOPIC);
 			String algorithm = rs.getString(PARTITIONER_ALGO);
-			//Ensures the DB value is compilant with the enumeration
-			PartitionerAlgorithm.valueOf(algorithm);
-			topicAlgoMap.put(PARTITION_ALGORITHM + topic, algorithm);
+			topicAlgoMap.put(PARTITION_ALGORITHM + topic, PartitionerAlgorithm.valueOf(algorithm));
 			return null;
 		});
 		return topicAlgoMap;

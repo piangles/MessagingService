@@ -41,18 +41,10 @@ public final class CustomPartitioner implements Partitioner
 	public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster)
 	{
 		int partition;
-		String algoStr = (String)kafkaConfig.get(PARTITION_ALGORITHM + topic);
-		PartitionerAlgorithm alogrithm = null;
-		if (algoStr != null)
-		{
-			alogrithm = PartitionerAlgorithm.valueOf(algoStr);
-		}
-		else
-		{
-			logger.warn("No algorithm was configured for partitioning for: " + topic);
-		}
+		PartitionerAlgorithm alogrithm = (PartitionerAlgorithm)kafkaConfig.get(PARTITION_ALGORITHM + topic);
 		if (alogrithm == null)
 		{
+			logger.warn("Using Default PartitionerAlgorithm because No algorithm was configured for partitioning for: " + topic);
 			alogrithm = PartitionerAlgorithm.Default;
 		}
 		switch (alogrithm)

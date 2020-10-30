@@ -22,7 +22,7 @@ public class MessagingServiceImpl implements MessagingService
 	private LoggingService logger = Locator.getInstance().getLoggingService();
 
 	private MessagingDAO messagingDAO = null;
-	private Map<String, String> topicPartitionAlgoMap = null;
+	private Map<String, PartitionerAlgorithm> topicPartitionAlgoMap = null;
 	private KafkaProducer<String, String> kafkaProducer = null;
 
 	public MessagingServiceImpl() throws Exception
@@ -38,8 +38,8 @@ public class MessagingServiceImpl implements MessagingService
 	{
 		logger.info("Retriving topic details for topic: " + topicName);
 		int partition = -1;
-		String paritionAlgoName = topicPartitionAlgoMap.get(PARTITION_ALGORITHM + topicName);
-		if (paritionAlgoName != null && PartitionerAlgorithm.valueOf(paritionAlgoName) == PartitionerAlgorithm.Default)
+		PartitionerAlgorithm paritionAlgo = topicPartitionAlgoMap.get(PARTITION_ALGORITHM + topicName);
+		if (paritionAlgo != null && paritionAlgo == PartitionerAlgorithm.Default)
 		{
 			partition = 0;
 		}
