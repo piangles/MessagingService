@@ -1,7 +1,5 @@
 package org.piangles.backbone.services.msg;
 
-import static org.piangles.backbone.services.msg.Constants.PARTITION_ALGORITHM;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,14 +34,18 @@ public class MessagingServiceImpl implements MessagingService
 	@Override
 	public Topic getTopic(String topicName) throws MessagingException
 	{
+		Topic topic = null;
 		logger.info("Retriving topic details for topic: " + topicName);
-		int partition = -1;
-		PartitionerAlgorithm paritionAlgo = topicPartitionAlgoMap.get(PARTITION_ALGORITHM + topicName);
-		if (paritionAlgo != null && paritionAlgo == PartitionerAlgorithm.Default)
+		try
 		{
-			partition = 0;
+			topic = messagingDAO.retrieveTopic(topicName);
 		}
-		return new Topic(topicName, partition);
+		catch (DAOException e)
+		{
+			logger.error("Failed retrieveTopic:", e);
+			throw new MessagingException(e);
+		}
+		return topic;
 	}
 	
 	/**
