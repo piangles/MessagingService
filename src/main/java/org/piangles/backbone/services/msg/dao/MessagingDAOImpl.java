@@ -39,7 +39,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 	{
 		Topic topic = null;
 		topic = super.executeSPQuery(GET_TOPIC_DETAILS_SP, 1, (call)->{call.setString(1, topicName);}, (rs, call)->{
-			return new Topic(rs.getString(TOPIC), rs.getInt(PARTITION), rs.getBoolean(COMPACTED));
+			return new Topic(rs.getString(TOPIC), -1, rs.getBoolean(COMPACTED));
 		});
 		return topic;
 	}
