@@ -90,9 +90,7 @@ public class MessagingServiceImpl implements MessagingService
 	
 	public void publish(String topicName, Event event) throws MessagingException
 	{
-		final String eventAsStr = encodeEvent(event);
-		ProducerRecord<String, String> record = new ProducerRecord<>(topicName, event.getPrimaryKey(),eventAsStr);
-		kafkaProducer.send(record, (metaData, expt) -> {
+		kafkaProducer.send(createProducerRecord(getTopic(topicName), event), (metaData, expt) -> {
 			if (expt != null)
 			{
 				logger.error("Unable to publish Event.", expt);
@@ -114,8 +112,19 @@ public class MessagingServiceImpl implements MessagingService
 		case Alias:
 			topics = getTopicsForAliases(fanoutRequest.getDistributionList());
 			break;
-		case Topic: //In this case the Custom Partioniner will kick in :TODO FanoutRequest -> Needs translation to actual Topic parameters???
-			topics = fanoutRequest.getDistributionList().stream().map(topicStr -> new Topic(topicStr)).collect(Collectors.toList());
+		case Topic: //In this case the Custom Partioniner will kick in
+			topics = fanoutRequest.getDistributionList().stream().map(
+					topicName -> {
+						try
+						{
+							return getTopic(topicName);
+						}
+						catch (Exception e)
+						{
+							throw new RuntimeException(e);
+						}
+					}
+			).collect(Collectors.toList());
 			break;
 		case Entity:
 			try
@@ -142,31 +151,27 @@ public class MessagingServiceImpl implements MessagingService
 	
 	private void fanOut(List<Topic> topics, Event event) throws MessagingException
 	{
-		final String eventAsStr = encodeEvent(event);
 		topics.parallelStream().forEach(topic -> {
-			ProducerRecord<String, String> record = null;
-			if (topic.isPartioned())
+			try
 			{
-				record = new ProducerRecord<>(topic.getTopicName(),topic.getPartition(),
-						event.getPrimaryKey(),eventAsStr);
+				kafkaProducer.send(createProducerRecord(topic, event), (metaData, expt) -> {
+					if (expt != null)
+					{
+						logger.error("Unable to fanOut Event.", expt);
+					}
+				});
 			}
-			else //CustomPartitioner will kick in and use the primaryKey to determine the Partition
+			catch (Exception e)
 			{
-				record = new ProducerRecord<>(topic.getTopicName(),
-						event.getPrimaryKey(),eventAsStr);
+				throw new RuntimeException(e);
 			}
-			
-			kafkaProducer.send(record, (metaData, expt) -> {
-				if (expt != null)
-				{
-					logger.error("Unable to fanOut Event.", expt);
-				}
-			});
 		});
 	}
 	
-	private String encodeEvent(Event event) throws MessagingException
+	private ProducerRecord<String, String> createProducerRecord(Topic topic, Event event) throws MessagingException
 	{
+		ProducerRecord<String, String> record = null;
+
 		String eventAsString = null;
 		
 		try
@@ -178,7 +183,25 @@ public class MessagingServiceImpl implements MessagingService
 			logger.error("Unable to encode Message.", e);
 			throw new MessagingException(e);
 		}
+
+		if (topic.isCustomPartioned())
+		{
+			/**
+			 * Configured CustomPartitioner will kick in and use 
+			 * 1. the primaryKey 
+			 * and 
+			 * 2. configured PartitionerAlgorithm 
+			 * to determine the PartitionNo.
+			 */
+			record = new ProducerRecord<>(topic.getTopicName(),
+					event.getPrimaryKey(),eventAsString);
+		}
+		else //Either it is Default 0 or Topic has a specific parition
+		{
+			record = new ProducerRecord<>(topic.getTopicName(),topic.getPartition(),
+					event.getPrimaryKey(),eventAsString);
+		}
 		
-		return eventAsString;
+		return record;
 	}
 }

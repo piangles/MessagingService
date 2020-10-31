@@ -39,7 +39,21 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 	{
 		Topic topic = null;
 		topic = super.executeSPQuery(GET_TOPIC_DETAILS_SP, 1, (call)->{call.setString(1, topicName);}, (rs, call)->{
-			return new Topic(rs.getString(TOPIC), -1, rs.getBoolean(COMPACTED));
+			Topic dbTopic = null;
+			String algorithm = rs.getString(PARTITIONER_ALGO);
+			if (PartitionerAlgorithm.valueOf(algorithm) == PartitionerAlgorithm.Default)
+			{
+				dbTopic = new Topic(rs.getString(TOPIC), 0, rs.getBoolean(COMPACTED)); 
+			}
+			else
+			{
+				/**
+				 * The caller has to determine the logic just as the sender on what 
+				 * Parition is going to be used as CustomPartition will kick in. 
+				 */
+				dbTopic = new Topic(rs.getString(TOPIC), Topic.CUSTOM_PARTIONED, rs.getBoolean(COMPACTED)); 
+			}
+			return dbTopic;
 		});
 		return topic;
 	}
