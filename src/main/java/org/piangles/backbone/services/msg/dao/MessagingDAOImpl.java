@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.piangles.backbone.services.config.DefaultConfigProvider;
+import org.piangles.backbone.services.msg.MessagingService;
 import org.piangles.backbone.services.msg.PartitionerAlgorithm;
 import org.piangles.backbone.services.msg.Topic;
 import org.piangles.core.dao.DAOException;
@@ -30,7 +31,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 
 	public MessagingDAOImpl() throws Exception
 	{
-		super.init(ResourceManager.getInstance().getRDBMSDataStore(new DefaultConfigProvider("MessagingService", COMPONENT_ID)));
+		super.init(ResourceManager.getInstance().getRDBMSDataStore(new DefaultConfigProvider(MessagingService.NAME, COMPONENT_ID)));
 	}
 
 

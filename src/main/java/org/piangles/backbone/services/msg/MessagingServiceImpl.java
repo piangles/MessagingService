@@ -35,7 +35,12 @@ public class MessagingServiceImpl implements MessagingService
 	public Topic getTopic(String topicName) throws MessagingException
 	{
 		Topic topic = null;
-		logger.info("Retriving topic details for topic: " + topicName);
+		/**
+		 * Only enable the logger for debugging way too many times this is logged
+		 * especially when we have an process(engine) or service constantly publishing. 
+		 * 
+		 * logger.info("Retriving topic details for topic: " + topicName); 
+		 */
 		try
 		{
 			topic = messagingDAO.retrieveTopic(topicName);
