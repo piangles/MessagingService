@@ -13,7 +13,7 @@ public class MessagingServiceContainer extends AbstractContainer
 		MessagingServiceContainer container = new MessagingServiceContainer();
 		try
 		{
-			container.performSteps();
+			container.performSteps(args);
 		}
 		catch (ContainerException e)
 		{
