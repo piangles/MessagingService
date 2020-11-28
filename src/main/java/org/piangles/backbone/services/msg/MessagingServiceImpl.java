@@ -209,4 +209,18 @@ public class MessagingServiceImpl implements MessagingService
 		
 		return record;
 	}
+
+	@Override
+	public void createStreamForUser(String userId) throws MessagingException
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Stream getStream() throws MessagingException
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
