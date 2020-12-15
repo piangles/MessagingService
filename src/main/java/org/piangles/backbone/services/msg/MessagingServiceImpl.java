@@ -32,6 +32,33 @@ public class MessagingServiceImpl implements MessagingService
 	}
 
 	@Override
+	public void createControlTopicForUser(String arg0) throws MessagingException
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
+	 * All topics here are to be log compacted
+	 */
+	@Override
+	public List<Topic> getTopicsForUser(String userId) throws MessagingException
+	{
+		List<Topic> topics = null;
+		logger.info("Retriving topics for user: " + userId);
+		try
+		{
+			topics = messagingDAO.retrieveTopicsForEntity("UserId", userId);
+		}
+		catch (DAOException e)
+		{
+			logger.error("Failed retrieveTopicsForUser:", e);
+			throw new MessagingException(e);
+		}
+		return topics;
+	}
+
+	@Override
 	public Topic getTopic(String topicName) throws MessagingException
 	{
 		Topic topic = null;
@@ -51,26 +78,6 @@ public class MessagingServiceImpl implements MessagingService
 			throw new MessagingException(e);
 		}
 		return topic;
-	}
-	
-	/**
-	 * All topics here are to be log compacted
-	 */
-	@Override
-	public List<Topic> getTopicsForUser(String userId) throws MessagingException
-	{
-		List<Topic> topics = null;
-		logger.info("Retriving topics for user: " + userId);
-		try
-		{
-			topics = messagingDAO.retrieveTopicsForEntity("UserId", userId);
-		}
-		catch (DAOException e)
-		{
-			logger.error("Failed retrieveTopicsForUser:", e);
-			throw new MessagingException(e);
-		}
-		return topics;
 	}
 
 	/**
@@ -208,19 +215,5 @@ public class MessagingServiceImpl implements MessagingService
 		}
 		
 		return record;
-	}
-
-	@Override
-	public void createStreamForUser(String userId) throws MessagingException
-	{
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Stream getStream() throws MessagingException
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 }
