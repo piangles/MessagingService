@@ -2,7 +2,7 @@
 		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.piangles.backbone.services</groupId>
-	<artifactId>MessagingService</artifactId>
+	<artifactId>messagingservice</artifactId>
 	<packaging>jar</packaging>
 	<version>0.1</version>
 
@@ -17,13 +17,13 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.piangles.backbone.services</groupId>
-			<artifactId>BackBoneServices</artifactId>
-			<version>0.1</version>
+			<artifactId>BackboneServices</artifactId>
+			<version>0.9</version>
 		</dependency>
 		<dependency>
 			<groupId>org.piangles.backbone.services</groupId>
-			<artifactId>BackBoneServicesLocator</artifactId>
-			<version>0.1</version>
+			<artifactId>BackboneServicesLocator</artifactId>
+			<version>1.0</version>
 		</dependency>
 
 		<dependency>
