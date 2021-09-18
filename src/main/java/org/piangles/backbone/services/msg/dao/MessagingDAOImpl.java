@@ -38,15 +38,16 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 {
 	private static final String COMPONENT_ID = "5d435fe2-7e54-43c3-84d2-8f4addf2dac9";
 	
-	private static final String GET_TOPIC_DETAILS_SP = "Backbone.GetTopicDetails";
-	private static final String GET_TOPICS_FOR_ENTITIES_SP = "Backbone.GetTopicsForEntities";
-	private static final String GET_TOPICS_FOR_ALIASES_SP = "Backbone.GetTopicsForAliases";
-	private static final String GET_PARTITION_ALGORITHM_FOR_TOPICS_SP = "Backbone.GetPartitionerAlgorithmForTopics";
+	private static final String GET_TOPIC_DETAILS_SP = "msg.get_topic_details";
+	private static final String GET_TOPICS_FOR_ENTITIES_SP = "msg.get_topics_for_entities";
+	private static final String GET_TOPICS_FOR_ALIASES_SP = "msg.get_topics_for_aliases";
+	private static final String GET_PARTITION_ALGORITHM_FOR_TOPICS_SP = "msg.get_partitioner_algorithm_for_topics";
 	
-	private static final String TOPIC = "Topic";
-	private static final String PARTITION = "PartitionNo";
-	private static final String PARTITIONER_ALGO = "PartitionerAlgorithm";
-	private static final String COMPACTED = "Compacted";
+	private static final String TOPIC = "topic";
+	private static final String PURPOSE = "purpose";
+	private static final String PARTITION = "partition_no";
+	private static final String PARTITIONER_ALGO = "partitioner_algorithm";
+	private static final String COMPACTED = "compacted";
 
 	public MessagingDAOImpl() throws Exception
 	{
@@ -103,7 +104,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 			call.setString(1, entityType);
 			call.setString(2, String.join(",", entityIds));
 		}, (rs, call) -> {
-			return new Topic(rs.getString(TOPIC), rs.getInt(PARTITION), rs.getBoolean(COMPACTED));
+			return new Topic(rs.getString(TOPIC), rs.getString(PURPOSE), rs.getInt(PARTITION), rs.getBoolean(COMPACTED));
 		});
 
 		return topics;

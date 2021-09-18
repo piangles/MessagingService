@@ -27,6 +27,8 @@ import org.piangles.core.services.remoting.ContainerException;
 
 public class MessagingServiceContainer extends AbstractContainer
 {
+	private MessagingServiceImpl service = null;
+
 	public static void main(String[] args)
 	{
 		MessagingServiceContainer container = new MessagingServiceContainer();
@@ -49,7 +51,6 @@ public class MessagingServiceContainer extends AbstractContainer
 	@Override
 	protected Object createServiceImpl() throws ContainerException
 	{
-		Object service = null;
 		try
 		{
 			service = new MessagingServiceImpl();
@@ -59,5 +60,15 @@ public class MessagingServiceContainer extends AbstractContainer
 			throw new ContainerException(e);
 		}
 		return service;
+	}
+	
+	@Override
+	protected void onShutdown()
+	{
+		if (service != null)
+		{
+			super.onShutdown();
+			service.shutdown();
+		}
 	}
 }
