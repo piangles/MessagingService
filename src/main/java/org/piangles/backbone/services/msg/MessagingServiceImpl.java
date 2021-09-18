@@ -51,9 +51,9 @@ public class MessagingServiceImpl implements MessagingService
 	}
 
 	@Override
-	public void createControlTopicForUser(String arg0) throws MessagingException
+	public void createTopicFor(String entityType, String entityId) throws MessagingException
 	{
-		// TODO Auto-generated method stub
+		logger.info("Create topics for EntityType: " + entityType + " with Id: " + entityId);
 		
 	}
 
@@ -61,13 +61,13 @@ public class MessagingServiceImpl implements MessagingService
 	 * All topics here are to be log compacted
 	 */
 	@Override
-	public List<Topic> getTopicsForUser(String userId) throws MessagingException
+	public List<Topic> getTopicsFor(String entityType, String entityId) throws MessagingException
 	{
 		List<Topic> topics = null;
-		logger.info("Retriving topics for user: " + userId);
+		logger.info("Retreving topics for EntityType: " + entityType + " with Id: " + entityId);
 		try
 		{
-			topics = messagingDAO.retrieveTopicsForEntity("UserId", userId);
+			topics = messagingDAO.retrieveTopicsForEntity(entityType, entityId);
 		}
 		catch (DAOException e)
 		{
