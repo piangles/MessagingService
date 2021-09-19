@@ -6,63 +6,65 @@ class EntityProperties
 	private String topicPurpose = null;
 	private int noOfPartitions = 1;
 	private short replicationFactor = 1;
-	private String cleanupPolicy = "compact";
 	private long retentionPolicy = 604800000;
+	private String cleanupPolicy = "compact";
+	private boolean readEarliest = false;
 	
 	
-	EntityProperties(String topicName, String topicPurpose, int noOfPartitions, short replicationFactor, String cleanupPolicy, long retentionPolicy)
+	EntityProperties(String topicName, String topicPurpose, int noOfPartitions, short replicationFactor, long retentionPolicy, String cleanupPolicy, boolean readEarliest)
 	{
 		this.topicName = topicName;
 		this.topicPurpose = topicPurpose;
 		this.noOfPartitions = noOfPartitions;
 		this.replicationFactor = replicationFactor;
-		this.cleanupPolicy = cleanupPolicy;
 		this.retentionPolicy = retentionPolicy;
+		this.cleanupPolicy = cleanupPolicy;
+		this.readEarliest = readEarliest;
 	}
 
 
-	public String getTopicName()
+	String getTopicName()
 	{
 		return topicName;
 	}
 
-
-	public String getTopicPurpose()
+	String getTopicPurpose()
 	{
 		return topicPurpose;
 	}
 
 
-	public int getNoOfPartitions()
+	int getNoOfPartitions()
 	{
 		return noOfPartitions;
 	}
 
 
-	public short getReplicationFactor()
+	short getReplicationFactor()
 	{
 		return replicationFactor;
 	}
 
 
-	public String getCleanupPolicy()
-	{
-		return cleanupPolicy;
-	}
-
-
-	public long getRetentionPolicy()
+	long getRetentionPolicy()
 	{
 		return retentionPolicy;
 	}
 
+	String getCleanupPolicy()
+	{
+		return cleanupPolicy;
+	}
+
+	boolean shouldReadEarliest()
+	{
+		return readEarliest;
+	}
 
 	@Override
 	public String toString()
 	{
-		return "EntityProperties [topicName=" + topicName + ", topicPurpose=" + topicPurpose + ", noOfPartitions=" + noOfPartitions + ", replicationFactor=" + replicationFactor + ", cleanupPolicy="
-				+ cleanupPolicy + ", retentionPolicy=" + retentionPolicy + "]";
+		return "EntityProperties [topicName=" + topicName + ", topicPurpose=" + topicPurpose + ", noOfPartitions=" + noOfPartitions + ", replicationFactor=" + replicationFactor + ", retentionPolicy="
+				+ retentionPolicy + ", cleanupPolicy=" + cleanupPolicy + ", readEarliest=" + readEarliest + "]";
 	}
-
-	
 }

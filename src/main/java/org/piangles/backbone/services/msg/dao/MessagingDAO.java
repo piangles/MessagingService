@@ -28,6 +28,8 @@ import org.piangles.core.dao.DAOException;
 
 public interface MessagingDAO
 {
+	public void saveTopicsForEntity(String entityType, String entityId, Topic topic) throws DAOException;
+	
 	public Topic retrieveTopic(String topicName) throws DAOException;
 	
 	public List<Topic> retrieveTopicsForEntity(String entityType, String entityId) throws DAOException;

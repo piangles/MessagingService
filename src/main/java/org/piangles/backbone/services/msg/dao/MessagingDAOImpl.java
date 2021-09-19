@@ -42,19 +42,25 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 	private static final String GET_TOPICS_FOR_ENTITIES_SP = "msg.get_topics_for_entities";
 	private static final String GET_TOPICS_FOR_ALIASES_SP = "msg.get_topics_for_aliases";
 	private static final String GET_PARTITION_ALGORITHM_FOR_TOPICS_SP = "msg.get_partitioner_algorithm_for_topics";
-	
+
+	private static final int DEFAULT_PARTITION = 0;
 	private static final String TOPIC = "topic";
 	private static final String PURPOSE = "purpose";
 	private static final String PARTITION = "partition_no";
 	private static final String PARTITIONER_ALGO = "partitioner_algorithm";
 	private static final String COMPACTED = "compacted";
+	private static final String READ_EARLIEST = "read_earliest";
 
 	public MessagingDAOImpl() throws Exception
 	{
 		super.init(ResourceManager.getInstance().getRDBMSDataStore(new DefaultConfigProvider(MessagingService.NAME, COMPONENT_ID)));
 	}
 
-
+	@Override
+	public void saveTopicsForEntity(String entityType, String entityId, Topic topic) throws DAOException
+	{
+	}
+	
 	@Override
 	public Topic retrieveTopic(String topicName) throws DAOException
 	{
@@ -64,7 +70,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 			String algorithm = rs.getString(PARTITIONER_ALGO);
 			if (PartitionerAlgorithm.valueOf(algorithm) == PartitionerAlgorithm.Default)
 			{
-				dbTopic = new Topic(rs.getString(TOPIC), 0, rs.getBoolean(COMPACTED)); 
+				dbTopic = new Topic(rs.getString(TOPIC), DEFAULT_PARTITION, rs.getBoolean(READ_EARLIEST)); 
 			}
 			else
 			{
@@ -72,7 +78,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 				 * The caller has to determine the logic just as the sender on what 
 				 * Parition is going to be used as CustomPartition will kick in. 
 				 */
-				dbTopic = new Topic(rs.getString(TOPIC), Topic.CUSTOM_PARTIONED, rs.getBoolean(COMPACTED)); 
+				dbTopic = new Topic(rs.getString(TOPIC), Topic.CUSTOM_PARTIONED, rs.getBoolean(READ_EARLIEST)); 
 			}
 			return dbTopic;
 		});
@@ -85,7 +91,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 		List<Topic> topics = super.executeSPQueryList(GET_TOPICS_FOR_ALIASES_SP, 1, (call) -> {
 			call.setString(1, String.join(",", aliases));
 		}, (rs, call) -> {
-			return new Topic(rs.getString(TOPIC), rs.getInt(PARTITION), rs.getBoolean(COMPACTED));
+			return new Topic(rs.getString(TOPIC), rs.getInt(PARTITION), rs.getBoolean(READ_EARLIEST));
 		});
 
 		return topics;
@@ -104,7 +110,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 			call.setString(1, entityType);
 			call.setString(2, String.join(",", entityIds));
 		}, (rs, call) -> {
-			return new Topic(rs.getString(TOPIC), rs.getString(PURPOSE), rs.getInt(PARTITION), rs.getBoolean(COMPACTED));
+			return new Topic(rs.getString(TOPIC), rs.getString(PURPOSE), rs.getInt(PARTITION), rs.getBoolean(COMPACTED), rs.getBoolean(READ_EARLIEST));
 		});
 
 		return topics;

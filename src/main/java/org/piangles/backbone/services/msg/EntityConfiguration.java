@@ -13,8 +13,10 @@ class EntityConfiguration
 	private static final String ENTITY_TOPIC_PURPOSE = "Entity%d.Topic.Purpose";
 	private static final String ENTITY_TOPIC_PARTITIONS = "Entity%d.Topic.Partitions";
 	private static final String ENTITY_TOPIC_REPLICATION_FACTOR = "Entity%d.Topic.ReplicationFactor";
-	private static final String ENTITY_TOPIC_CLEANUP_POLICY = "Entity%d.Topic.CleanupPolicy";
 	private static final String ENTITY_TOPIC_RETENTION_POLICY = "Entity%d.Topic.RetentionPolicy";
+	private static final String ENTITY_TOPIC_CLEANUP_POLICY = "Entity%d.Topic.CleanupPolicy";
+	private static final String ENTITY_TOPIC_READ_EARLIEST = "Entity%d.Topic.ReadEarliest";
+	
 
 	private Map<String, List<EntityProperties>> entityPropertyMap = null;
 	
@@ -27,8 +29,9 @@ class EntityConfiguration
 		String topicPurpose = null;
 		int noOfPartitions = 1;
 		short replicationFactor = 1;
-		String cleanupPolicy = "compact";
 		long retentionPolicy = 0;
+		String cleanupPolicy = "compact";
+		boolean readEarliest = false;
 
 		int count = 0;
 		List<EntityProperties> entityProperties = null;
@@ -49,10 +52,11 @@ class EntityConfiguration
 				topicPurpose = props.getProperty(String.format(ENTITY_TOPIC_PURPOSE, count));
 				noOfPartitions = Integer.parseInt(props.getProperty(String.format(ENTITY_TOPIC_PARTITIONS, count)));
 				replicationFactor = Short.parseShort(props.getProperty(String.format(ENTITY_TOPIC_REPLICATION_FACTOR, count)));
-				cleanupPolicy = props.getProperty(String.format(ENTITY_TOPIC_CLEANUP_POLICY, count));
 				retentionPolicy = Long.parseLong(props.getProperty(String.format(ENTITY_TOPIC_RETENTION_POLICY, count)));
+				cleanupPolicy = props.getProperty(String.format(ENTITY_TOPIC_CLEANUP_POLICY, count));
+				readEarliest = Boolean.parseBoolean(props.getProperty(String.format(ENTITY_TOPIC_READ_EARLIEST, count)));
 				
-				entityProperties.add(new EntityProperties(topicName, topicPurpose, noOfPartitions, replicationFactor, cleanupPolicy, retentionPolicy));
+				entityProperties.add(new EntityProperties(topicName, topicPurpose, noOfPartitions, replicationFactor, retentionPolicy, cleanupPolicy, readEarliest));
 			}
 			else
 			{

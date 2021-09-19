@@ -35,7 +35,7 @@ public class TestConsumer
 	{
 		KafkaMessagingSystem kms = ResourceManager.getInstance().getKafkaMessagingSystem(new DefaultConfigProvider("MessagingService", "fd5f51bc-5a14-4675-9df4-982808bb106b"));
 		ConsumerProperties consumerProps = new ConsumerProperties("group.id");
-		consumerProps.getTopics().add(consumerProps.new Topic("", 1, false, 0));
+		consumerProps.getTopics().add(consumerProps.new Topic("", 1, false));
 		Consumer consumer = kms.createConsumer(consumerProps);
 
 		while (true)
