@@ -45,7 +45,7 @@ import org.piangles.core.util.coding.JSON;
 
 public class MessagingServiceImpl implements MessagingService
 {
-	private static final String COMPACTED = "compacted";
+	private static final String COMPACT = "compact";
 	private LoggingService logger = Locator.getInstance().getLoggingService();
 
 	private MessagingDAO messagingDAO = null;
@@ -127,7 +127,7 @@ public class MessagingServiceImpl implements MessagingService
 			for (EntityProperties entityProperties : listOfEntityProperties)
 			{
 				String topicName = String.format(entityProperties.getTopicName(), entityId);
-				boolean compacted = COMPACTED.equals(entityProperties.getCleanupPolicy());
+				boolean compacted = COMPACT.equals(entityProperties.getCleanupPolicy());
 				
 				topic = new Topic(topicName, entityProperties.getTopicPurpose(), entityProperties.getNoOfPartitions(), 
 									compacted, entityProperties.shouldReadEarliest());

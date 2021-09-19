@@ -24,19 +24,19 @@ class EntityConfiguration
 	{
 		entityPropertyMap = new HashMap<>();
 		
-		String entityType = null;
-		String topicName = null;
-		String topicPurpose = null;
-		int noOfPartitions = 1;
-		short replicationFactor = 1;
-		long retentionPolicy = 0;
-		String cleanupPolicy = "compact";
-		boolean readEarliest = false;
-
 		int count = 0;
 		List<EntityProperties> entityProperties = null;
 		while (true)
 		{
+			String entityType = null;
+			String topicName = null;
+			String topicPurpose = null;
+			int noOfPartitions = 1;
+			short replicationFactor = 1;
+			long retentionPolicy = 0;
+			String cleanupPolicy = "compact";
+			boolean readEarliest = false;
+			
 			entityType = props.getProperty(String.format(ENTITY_TYPE, count));
 			
 			if (entityType != null)

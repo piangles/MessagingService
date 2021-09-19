@@ -38,6 +38,7 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 {
 	private static final String COMPONENT_ID = "5d435fe2-7e54-43c3-84d2-8f4addf2dac9";
 	
+	private static final String SAVE_TOPIC_ENTITY_SP = "msg.save_topic_for_entry";
 	private static final String GET_TOPIC_DETAILS_SP = "msg.get_topic_details";
 	private static final String GET_TOPICS_FOR_ENTITIES_SP = "msg.get_topics_for_entities";
 	private static final String GET_TOPICS_FOR_ALIASES_SP = "msg.get_topics_for_aliases";
@@ -59,6 +60,18 @@ public class MessagingDAOImpl extends AbstractDAO implements MessagingDAO
 	@Override
 	public void saveTopicsForEntity(String entityType, String entityId, Topic topic) throws DAOException
 	{
+		super.executeSP(SAVE_TOPIC_ENTITY_SP, 7, (call)->{
+			
+			call.setString(1, entityType);
+			call.setString(2, entityId);
+			call.setString(3, topic.getTopicName());
+			call.setString(4, topic.getPurpose());
+			call.setInt(5, topic.getPartition());
+			call.setBoolean(6, topic.isCompacted());
+			call.setBoolean(7, topic.shouldReadEarliest());
+			
+		});
+
 	}
 	
 	@Override
