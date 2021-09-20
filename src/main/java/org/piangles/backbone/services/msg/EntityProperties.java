@@ -4,18 +4,18 @@ class EntityProperties
 {
 	private String topicName = null;
 	private String topicPurpose = null;
-	private int noOfPartitions = 1;
+	private int partitionNo = 0;
 	private short replicationFactor = 1;
 	private long retentionPolicy = 604800000;
 	private String cleanupPolicy = "compact";
 	private boolean readEarliest = false;
 	
 	
-	EntityProperties(String topicName, String topicPurpose, int noOfPartitions, short replicationFactor, long retentionPolicy, String cleanupPolicy, boolean readEarliest)
+	EntityProperties(String topicName, String topicPurpose, int partitionNo, short replicationFactor, long retentionPolicy, String cleanupPolicy, boolean readEarliest)
 	{
 		this.topicName = topicName;
 		this.topicPurpose = topicPurpose;
-		this.noOfPartitions = noOfPartitions;
+		this.partitionNo = partitionNo;
 		this.replicationFactor = replicationFactor;
 		this.retentionPolicy = retentionPolicy;
 		this.cleanupPolicy = cleanupPolicy;
@@ -34,9 +34,9 @@ class EntityProperties
 	}
 
 
-	int getNoOfPartitions()
+	int getPartitionNo()
 	{
-		return noOfPartitions;
+		return partitionNo;
 	}
 
 
@@ -64,7 +64,7 @@ class EntityProperties
 	@Override
 	public String toString()
 	{
-		return "EntityProperties [topicName=" + topicName + ", topicPurpose=" + topicPurpose + ", noOfPartitions=" + noOfPartitions + ", replicationFactor=" + replicationFactor + ", retentionPolicy="
+		return "EntityProperties [topicName=" + topicName + ", topicPurpose=" + topicPurpose + ", partitionNo=" + partitionNo + ", replicationFactor=" + replicationFactor + ", retentionPolicy="
 				+ retentionPolicy + ", cleanupPolicy=" + cleanupPolicy + ", readEarliest=" + readEarliest + "]";
 	}
 }
