@@ -91,7 +91,8 @@ public class MessagingServiceImpl implements MessagingService
 				topicConfig.put(TopicConfig.CLEANUP_POLICY_CONFIG, entityProperties.getCleanupPolicy());
 				topicConfig.put(TopicConfig.RETENTION_MS_CONFIG, String.valueOf(entityProperties.getRetentionPolicy()));
 
-				NewTopic newTopic = new NewTopic(topicName, entityProperties.getPartitionNo(), entityProperties.getReplicationFactor());
+				//ParitionNo=0 implies we need to create 1 Partition
+				NewTopic newTopic = new NewTopic(topicName, entityProperties.getPartitionNo()+1, entityProperties.getReplicationFactor());
 				newTopic.configs(topicConfig);
 
 				newTopics.add(newTopic);
