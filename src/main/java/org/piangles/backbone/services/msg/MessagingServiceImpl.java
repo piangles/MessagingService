@@ -38,6 +38,7 @@ import org.piangles.backbone.services.logging.LoggingService;
 import org.piangles.backbone.services.msg.dao.MessagingDAO;
 import org.piangles.backbone.services.msg.dao.MessagingDAOImpl;
 import org.piangles.core.dao.DAOException;
+import org.piangles.core.expt.NotFoundException;
 import org.piangles.core.resources.KafkaMessagingSystem;
 import org.piangles.core.resources.ResourceManager;
 import org.piangles.core.util.abstractions.ConfigProvider;
@@ -60,100 +61,104 @@ public class MessagingServiceImpl implements MessagingService
 	{
 		messagingDAO = new MessagingDAOImpl();
 		topicPartitionAlgoMap = messagingDAO.retrievePartitionerAlgorithmForTopics();
-		
+
 		ConfigProvider cp = new MsgConfigProvider(topicPartitionAlgoMap);
-		
+
 		msgProperties = cp.getProperties();
 		entityConfiguration = new EntityConfiguration(msgProperties);
-		
+
 		KafkaMessagingSystem kms = ResourceManager.getInstance().getKafkaMessagingSystem(cp);
 		kafkaProducer = kms.createProducer();
-		
+
 		topicMap = new HashMap<>();
 	}
 
+	/**
+	 * Given an EntityType and EntityId, this creates a Topic using the
+	 * configuration's naming format. This topic is then persisted in 
+	 * the MessagingEntitites table using the same configuration.
+	 * 
+	 * This will be called on sign up for a User/Business so a Topic 
+	 * is created for that Entity and can be used for publishing notifications.
+	 */
 	@Override
 	public void createTopicFor(String entityType, String entityId) throws MessagingException
 	{
 		logger.info("Creating topics for EntityType: " + entityType + " with Id: " + entityId);
 
 		List<EntityProperties> listOfEntityProperties = entityConfiguration.getEntityProperties(entityType);
-		if (listOfEntityProperties != null)
-		{
-			List<NewTopic> newTopics = new ArrayList<>();
-			Admin adminClient = KafkaAdminClient.create(msgProperties);
-			
-			for (EntityProperties entityProperties : listOfEntityProperties)
-			{
-				String topicName = String.format(entityProperties.getTopicName(), entityId);
-
-				Map<String, String> topicConfig = new HashMap<>();
-				topicConfig.put(TopicConfig.CLEANUP_POLICY_CONFIG, entityProperties.getCleanupPolicy());
-				topicConfig.put(TopicConfig.RETENTION_MS_CONFIG, String.valueOf(entityProperties.getRetentionPolicy()));
-
-				//ParitionNo=0 implies we need to create 1 Partition
-				NewTopic newTopic = new NewTopic(topicName, entityProperties.getPartitionNo()+1, entityProperties.getReplicationFactor());
-				newTopic.configs(topicConfig);
-
-				newTopics.add(newTopic);
-			}
-
-			CreateTopicsResult result = adminClient.createTopics(newTopics);
-
-			KafkaFuture<Void> resultFuture = result.all();
-			try
-			{
-				resultFuture.get();
-			}
-			catch (Exception e)
-			{
-				String message = "Failed to create Topic(s) for EntityType: " + entityType + " with EntityId: " + entityId + " because of: " + e.getMessage();
-				logger.error(message, e);
-				throw new MessagingException(message, e);
-			}
-			finally
-			{
-				try
-				{
-					adminClient.close();
-				}
-				catch (Exception e)
-				{
-					logger.error("Error closing AdminClient connection.");
-				}
-			}
-
-			//Persist in EntityTable all the topics
-			Topic topic = null;
-			for (EntityProperties entityProperties : listOfEntityProperties)
-			{
-				String topicName = String.format(entityProperties.getTopicName(), entityId);
-				boolean compacted = COMPACT.equals(entityProperties.getCleanupPolicy());
-				
-				topic = new Topic(topicName, entityProperties.getTopicPurpose(), entityProperties.getPartitionNo(), 
-									compacted, entityProperties.shouldReadEarliest());
-				try
-				{
-					messagingDAO.saveTopicsForEntity(entityType, entityId, topic);
-				}
-				catch (DAOException e)
-				{
-					logger.error("Failed Saving Topics: " + topic);
-					String message = "Failed to save Topic(s) for EntityType: " + entityType + " with EntityId: " + entityId + " because of: " + e.getMessage();
-					logger.error(message, e);
-					throw new MessagingException(message, e);
-				}
-			}
-			logger.info("Created topics for EntityType: " + entityType + " with EntityId: " + entityId + " successfuly.");
-		}
-		else
+		if (listOfEntityProperties == null)
 		{
 			throw new MessagingException("No EntityConfiguration found for EntityType: " + entityType);
 		}
+
+		List<NewTopic> newTopics = new ArrayList<>();
+		Admin adminClient = KafkaAdminClient.create(msgProperties);
+
+		for (EntityProperties entityProperties : listOfEntityProperties)
+		{
+			String topicName = String.format(entityProperties.getTopicName(), entityId);
+
+			Map<String, String> topicConfig = new HashMap<>();
+			topicConfig.put(TopicConfig.CLEANUP_POLICY_CONFIG, entityProperties.getCleanupPolicy());
+			topicConfig.put(TopicConfig.RETENTION_MS_CONFIG, String.valueOf(entityProperties.getRetentionPolicy()));
+
+			// ParitionNo=0 implies we need to create 1 Partition
+			NewTopic newTopic = new NewTopic(topicName, entityProperties.getPartitionNo() + 1, entityProperties.getReplicationFactor());
+			newTopic.configs(topicConfig);
+
+			newTopics.add(newTopic);
+		}
+
+		CreateTopicsResult result = adminClient.createTopics(newTopics);
+
+		KafkaFuture<Void> resultFuture = result.all();
+		try
+		{
+			resultFuture.get();
+		}
+		catch (Exception e)
+		{
+			String message = "Failed to create Topic(s) for EntityType: " + entityType + " with EntityId: " + entityId;
+			logger.error(message + ". Reason: " + e.getMessage(), e);
+			throw new MessagingException(message);
+		}
+		finally
+		{
+			try
+			{
+				adminClient.close();
+			}
+			catch (Exception e)
+			{
+				logger.error("Error closing AdminClient connection.");
+			}
+		}
+
+		// Persist in EntityTable all the topics
+		Topic topic = null;
+		for (EntityProperties entityProperties : listOfEntityProperties)
+		{
+			String topicName = String.format(entityProperties.getTopicName(), entityId);
+			boolean compacted = COMPACT.equals(entityProperties.getCleanupPolicy());
+
+			topic = new Topic(topicName, entityProperties.getTopicPurpose(), entityProperties.getPartitionNo(), compacted, entityProperties.shouldReadEarliest());
+			try
+			{
+				messagingDAO.saveTopicsForEntity(entityType, entityId, topic);
+			}
+			catch (DAOException e)
+			{
+				String message = "Failed to save Topic(s) for EntityType: " + entityType + " with EntityId: " + entityId;
+				logger.error(message + ". Reason: " + e.getMessage(), e);
+				throw new MessagingException(message);
+			}
+		}
+		logger.info("Created topics for EntityType: " + entityType + " with EntityId: " + entityId + " successfuly.");
 	}
 
 	/**
-	 * All topics here are to be log compacted
+	 * Retrieves a Topic given EntityName and EntityId from the MessagingEntities table.
 	 */
 	@Override
 	public List<Topic> getTopicsFor(String entityType, String entityId) throws MessagingException
@@ -166,8 +171,9 @@ public class MessagingServiceImpl implements MessagingService
 		}
 		catch (DAOException e)
 		{
-			logger.error("Failed retrieveTopicsForUser:", e);
-			throw new MessagingException(e);
+			String message = "Failed retrieveTopicsFor EntityType:" + entityType + " for EntityId:" + entityId; 
+			logger.error(message + ". Reason: " + e.getMessage(), e);
+			throw new MessagingException(message);
 		}
 		return topics;
 	}
@@ -197,16 +203,18 @@ public class MessagingServiceImpl implements MessagingService
 		}
 		catch (DAOException e)
 		{
-			logger.error("Failed retrieveTopic:", e);
-			throw new MessagingException(e);
+			String message = "Failed to retrieveTopic: " + topicName;
+			logger.error(message + ". Reason: " + e.getMessage(), e);
+			throw new MessagingException(message);
 		}
 		return topic;
 	}
 
 	/**
 	 * Specifically called by Gateway on behalf of the clients connected to it.
-	 * UI Clients will only know Aliases and this queries the tables msg.messaging_aliases
-	 * meant for that purpose and returns the Topic details.
+	 * UI Clients will only know Aliases and this queries the tables
+	 * msg.messaging_aliases meant for that purpose and returns the Topic
+	 * details.
 	 */
 	@Override
 	public List<Topic> getTopicsForAlias(String alias) throws MessagingException
@@ -219,8 +227,9 @@ public class MessagingServiceImpl implements MessagingService
 		}
 		catch (DAOException e)
 		{
-			logger.error("Failed retrieveTopicsForAliases:", e);
-			throw new MessagingException(e);
+			String message = "Failed to getTopicsForAlias: " + alias;
+			logger.error(message + ". Reason: " + e.getMessage(), e);
+			throw new MessagingException(message);
 		}
 		return topics;
 	}
@@ -228,18 +237,37 @@ public class MessagingServiceImpl implements MessagingService
 	public void publish(String topicName, Event event) throws MessagingException
 	{
 		Topic topic = getTopic(topicName);
-		if (topic != null)
+		if (topic == null)
 		{
-			kafkaProducer.send(createProducerRecord(topic, event), (metaData, expt) -> {
+			throw new NotFoundException("TopicName: " + topicName + " is  not registered in MessagingService.");			
+		}
+		
+		kafkaProducer.send(createProducerRecord(topic, event), (metaData, expt) -> {
+			if (expt != null)
+			{
+				logger.error("Unable to publish Event.", expt);
+			}
+		});
+	}
+
+
+	@Override
+	public void publish(String entityType, String entityId, Event event) throws MessagingException
+	{
+		List<Topic> entityTopics = getTopicsFor(entityType, entityId);
+		if (entityTopics == null || entityTopics.size() == 0)
+		{
+			throw new NotFoundException("No topics found for EntityType: " + entityType + " with EntityId: " + entityId);
+		}
+		
+		for (Topic entityTopic : entityTopics)
+		{
+			kafkaProducer.send(createProducerRecord(entityTopic, event), (metaData, expt) -> {
 				if (expt != null)
 				{
 					logger.error("Unable to publish Event.", expt);
 				}
 			});
-		}
-		else
-		{
-			throw new MessagingException("TopicName: " + topicName + " is  not registered in MessagingService.");
 		}
 	}
 
@@ -261,8 +289,9 @@ public class MessagingServiceImpl implements MessagingService
 			}
 			catch (DAOException e)
 			{
-				logger.error("Error retrieveTopicsForEntities : ", e);
-				throw new MessagingException(e);
+				String message = "Unable to retrieveTopicsForEntities: " + fanoutRequest.getDistributionList();
+				logger.error(message + ". Reason: " + e.getMessage(), e);
+				throw new MessagingException(message);
 			}
 			break;
 		case Topic: // In this case the Custom Partioniner will kick in
@@ -284,8 +313,9 @@ public class MessagingServiceImpl implements MessagingService
 			}
 			catch (DAOException e)
 			{
-				logger.error("Error retrieveTopicsForEntities : ", e);
-				throw new MessagingException(e);
+				String message = "Unable to retrieveTopicsForEntities: " + fanoutRequest.getDistributionList();
+				logger.error(message + ". Reason: " + e.getMessage(), e);
+				throw new MessagingException(message);
 			}
 			break;
 		}
@@ -299,7 +329,7 @@ public class MessagingServiceImpl implements MessagingService
 			logger.warn("Topics could not be resolved for FanoutRequest Distribution Type:" + fanoutRequest.getDistributionListType() + "  and List:" + fanoutRequest.getDistributionList());
 		}
 	}
-	
+
 	public void shutdown()
 	{
 		try
@@ -343,8 +373,9 @@ public class MessagingServiceImpl implements MessagingService
 		}
 		catch (Exception e)
 		{
-			logger.error("Unable to encode Message.", e);
-			throw new MessagingException(e);
+			String message = "Unable to encode Event: " + event.getEventType() + " with Payload: " + event.getPayload();
+			logger.error(message + ". Reason: " + e.getMessage(), e);
+			throw new MessagingException(message);
 		}
 
 		if (topic.isCustomPartioned())
