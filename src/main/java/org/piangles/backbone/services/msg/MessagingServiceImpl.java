@@ -23,11 +23,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
+import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -95,66 +97,88 @@ public class MessagingServiceImpl implements MessagingService
 		List<NewTopic> newTopics = new ArrayList<>();
 		Admin adminClient = KafkaAdminClient.create(msgProperties);
 
+	    Set<String> currentTopicList = null;
+	    try
+		{
+		    ListTopicsResult topics = adminClient.listTopics();
+			currentTopicList = topics.names().get();
+		}
+		catch (Exception e) //InterruptedException & ExecutionException
+		{
+			logger.error("Failed to Query for ALL existing Topics. Reason: " + e.getMessage(), e);
+		}
+
+		
 		for (EntityProperties entityProperties : listOfEntityProperties)
 		{
 			String topicName = String.format(entityProperties.getTopicName(), entityId);
 
-			Map<String, String> topicConfig = new HashMap<>();
-			topicConfig.put(TopicConfig.CLEANUP_POLICY_CONFIG, entityProperties.getCleanupPolicy());
-			topicConfig.put(TopicConfig.RETENTION_MS_CONFIG, String.valueOf(entityProperties.getRetentionPolicy()));
+			if (currentTopicList == null || !currentTopicList.contains(topicName))
+			{
+				
+				Map<String, String> topicConfig = new HashMap<>();
+				topicConfig.put(TopicConfig.CLEANUP_POLICY_CONFIG, entityProperties.getCleanupPolicy());
+				topicConfig.put(TopicConfig.RETENTION_MS_CONFIG, String.valueOf(entityProperties.getRetentionPolicy()));
 
-			// ParitionNo=0 implies we need to create 1 Partition
-			NewTopic newTopic = new NewTopic(topicName, entityProperties.getPartitionNo() + 1, entityProperties.getReplicationFactor());
-			newTopic.configs(topicConfig);
+				// ParitionNo=0 implies we need to create 1 Partition
+				NewTopic newTopic = new NewTopic(topicName, entityProperties.getPartitionNo() + 1, entityProperties.getReplicationFactor());
+				newTopic.configs(topicConfig);
 
-			newTopics.add(newTopic);
+				newTopics.add(newTopic);
+			}
 		}
-
-		CreateTopicsResult result = adminClient.createTopics(newTopics);
-
-		KafkaFuture<Void> resultFuture = result.all();
-		try
+		
+		if (newTopics.size() == 0)
 		{
-			resultFuture.get();
+			logger.info("No topics to create for EntityType: " + entityType + " with EntityId: " + entityId + ". They already exist, processed successfully.");
 		}
-		catch (Exception e)
-		{
-			String message = "Failed to create Topic(s) for EntityType: " + entityType + " with EntityId: " + entityId;
-			logger.error(message + ". Reason: " + e.getMessage(), e);
-			throw new MessagingException(message);
-		}
-		finally
+		else
 		{
 			try
 			{
-				adminClient.close();
+				CreateTopicsResult result = adminClient.createTopics(newTopics);
+				KafkaFuture<Void> resultFuture = result.all();
+				resultFuture.get();
 			}
 			catch (Exception e)
 			{
-				logger.error("Error closing AdminClient connection.");
-			}
-		}
-
-		// Persist in EntityTable all the topics
-		Topic topic = null;
-		for (EntityProperties entityProperties : listOfEntityProperties)
-		{
-			String topicName = String.format(entityProperties.getTopicName(), entityId);
-			boolean compacted = COMPACT.equals(entityProperties.getCleanupPolicy());
-
-			topic = new Topic(topicName, entityProperties.getTopicPurpose(), entityProperties.getPartitionNo(), compacted, entityProperties.shouldReadEarliest());
-			try
-			{
-				messagingDAO.saveTopicsForEntity(entityType, entityId, topic);
-			}
-			catch (DAOException e)
-			{
-				String message = "Failed to save Topic(s) for EntityType: " + entityType + " with EntityId: " + entityId;
+				String message = "Failed to create Topic(s) for EntityType: " + entityType + " with EntityId: " + entityId;
 				logger.error(message + ". Reason: " + e.getMessage(), e);
 				throw new MessagingException(message);
 			}
+			finally
+			{
+				try
+				{
+					adminClient.close();
+				}
+				catch (Exception e)
+				{
+					logger.error("Error closing AdminClient connection.");
+				}
+			}
+
+			// Persist in EntityTable all the topics
+			Topic topic = null;
+			for (EntityProperties entityProperties : listOfEntityProperties)
+			{
+				String topicName = String.format(entityProperties.getTopicName(), entityId);
+				boolean compacted = COMPACT.equals(entityProperties.getCleanupPolicy());
+
+				topic = new Topic(topicName, entityProperties.getTopicPurpose(), entityProperties.getPartitionNo(), compacted, entityProperties.shouldReadEarliest());
+				try
+				{
+					messagingDAO.saveTopicsForEntity(entityType, entityId, topic);
+				}
+				catch (DAOException e)
+				{
+					String message = "Failed to save Topic(s) for EntityType: " + entityType + " with EntityId: " + entityId;
+					logger.error(message + ". Reason: " + e.getMessage(), e);
+					throw new MessagingException(message);
+				}
+			}
+			logger.info("Created topics for EntityType: " + entityType + " with EntityId: " + entityId + " successfuly.");
 		}
-		logger.info("Created topics for EntityType: " + entityType + " with EntityId: " + entityId + " successfuly.");
 	}
 
 	/**
