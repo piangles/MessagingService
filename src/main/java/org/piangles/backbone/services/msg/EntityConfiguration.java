@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
+
 class EntityConfiguration
 {
 	private static final String ENTITY_TYPE = "Entity%d.Type";
@@ -33,7 +35,7 @@ class EntityConfiguration
 			String topicPurpose = null;
 			int partitionNo = 0;
 			short replicationFactor = 1;
-			long retentionPolicy = 0;
+			Long retentionPolicy = null;
 			String cleanupPolicy = "compact";
 			boolean readEarliest = false;
 			
@@ -52,7 +54,13 @@ class EntityConfiguration
 				topicPurpose = props.getProperty(String.format(ENTITY_TOPIC_PURPOSE, count));
 				partitionNo = Integer.parseInt(props.getProperty(String.format(ENTITY_TOPIC_PARTITION_NUMBER, count)));
 				replicationFactor = Short.parseShort(props.getProperty(String.format(ENTITY_TOPIC_REPLICATION_FACTOR, count)));
-				retentionPolicy = Long.parseLong(props.getProperty(String.format(ENTITY_TOPIC_RETENTION_POLICY, count)));
+				
+				String retentionPolicyStr = props.getProperty(String.format(ENTITY_TOPIC_RETENTION_POLICY, count));
+				if (StringUtils.isNotBlank(retentionPolicyStr))
+				{
+					retentionPolicy = Long.parseLong(retentionPolicyStr);
+				}
+				
 				cleanupPolicy = props.getProperty(String.format(ENTITY_TOPIC_CLEANUP_POLICY, count));
 				readEarliest = Boolean.parseBoolean(props.getProperty(String.format(ENTITY_TOPIC_READ_EARLIEST, count)));
 				

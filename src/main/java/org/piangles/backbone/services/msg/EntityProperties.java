@@ -2,16 +2,18 @@ package org.piangles.backbone.services.msg;
 
 class EntityProperties
 {
+	private static final String COMPACT = "compact";
+	
 	private String topicName = null;
 	private String topicPurpose = null;
 	private int partitionNo = 0;
 	private short replicationFactor = 1;
-	private long retentionPolicy = 604800000;
-	private String cleanupPolicy = "compact";
+	private Long retentionPolicy = new Long(604800000); //7 Days
+	private String cleanupPolicy = COMPACT;
 	private boolean readEarliest = false;
 	
 	
-	EntityProperties(String topicName, String topicPurpose, int partitionNo, short replicationFactor, long retentionPolicy, String cleanupPolicy, boolean readEarliest)
+	EntityProperties(String topicName, String topicPurpose, int partitionNo, short replicationFactor, Long retentionPolicy, String cleanupPolicy, boolean readEarliest)
 	{
 		this.topicName = topicName;
 		this.topicPurpose = topicPurpose;
@@ -46,7 +48,7 @@ class EntityProperties
 	}
 
 
-	long getRetentionPolicy()
+	Long getRetentionPolicy()
 	{
 		return retentionPolicy;
 	}
@@ -54,6 +56,11 @@ class EntityProperties
 	String getCleanupPolicy()
 	{
 		return cleanupPolicy;
+	}
+	
+	boolean isCompacted()
+	{
+		return (cleanupPolicy.indexOf(COMPACT) != -1);
 	}
 
 	boolean shouldReadEarliest()
