@@ -128,18 +128,30 @@ public class MessagingServiceImpl implements MessagingService
 				if (entityProperties.isCompacted())
 				{
 					/**
+					 * Important Note : Compaction is at segment(file) level not individual message level.
+					 * ---------------
+					 * 
 					 * For log compacted message, these settings are currently harded coded.
 					 * This will ensure we will have at least one latest message as per Kafka documenation.
 					 */
 					
-					/**
-					 * The below 2 properties are basically telling Kafka by 100th Milliseconds compact it. 
-					 */
-					topicConfig.put(TopicConfig.MIN_COMPACTION_LAG_MS_CONFIG, String.valueOf(100)); //Minimum time a message will remain uncompacted
 					topicConfig.put(TopicConfig.MAX_COMPACTION_LAG_MS_CONFIG, String.valueOf(100)); //Maximum time a message will remain uneligable for compaction
-					
+
+					/**
+					 * 
+					 * This compaction
+					 * The below 2 properties are basically telling Kafka
+					 * 1. Roll over the segmet every 100 MilliSeconds
+					 * 2. Mark segment for cleanup even if .1% of the file is having duplicate records.  
+					 * 
+					 * This current config results in 2 messages with same Key being present, by far the effective combination for our needs.
+					 * 
+					 * TODO
+					 * 1. Move this to DB.
+					 * 2. Find the ideal ratio.
+					 */
 					topicConfig.put(TopicConfig.SEGMENT_MS_CONFIG, String.valueOf(100));//100 Milliseconds
-					topicConfig.put(TopicConfig.SEGMENT_BYTES_CONFIG, String.valueOf(100));//100 Milliseconds
+					topicConfig.put(TopicConfig.MIN_CLEANABLE_DIRTY_RATIO_CONFIG, String.valueOf(0.001)); 
 					
 					topicConfig.put(TopicConfig.DELETE_RETENTION_MS_CONFIG, String.valueOf(100)); //Retention time for deleted messages
 				}
