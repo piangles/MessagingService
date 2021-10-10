@@ -118,24 +118,40 @@ public class MessagingServiceImpl implements MessagingService
 				
 				Map<String, String> topicConfig = new HashMap<>();
 				topicConfig.put(TopicConfig.CLEANUP_POLICY_CONFIG, entityProperties.getCleanupPolicy());
+
 				/**
-				 * For log compacted message, these settings are currently harded coded.
-				 * This will ensure we will have at least one latest message as per Kafka documenation.
+				 * Kafka offer compact, delete and compact,delete so old segment files can be deleted.
+				 * For now MessagingService will use binary. This will have to be addressed at somepoint
+				 * when compacted log files grow in size significantly and we need to delete old log files
+				 * that are compacted.
 				 */
 				if (entityProperties.isCompacted())
 				{
-					topicConfig.put(TopicConfig.MIN_COMPACTION_LAG_MS_CONFIG, String.valueOf(100)); //100 Milliseconds
-					topicConfig.put(TopicConfig.MAX_COMPACTION_LAG_MS_CONFIG, String.valueOf(100)); //100 Milliseconds
-					topicConfig.put(TopicConfig.DELETE_RETENTION_MS_CONFIG, String.valueOf(100)); //100 Milliseconds
+					/**
+					 * For log compacted message, these settings are currently harded coded.
+					 * This will ensure we will have at least one latest message as per Kafka documenation.
+					 */
+					
+					/**
+					 * The below 2 properties are basically telling Kafka by 100th Milliseconds compact it. 
+					 */
+					topicConfig.put(TopicConfig.MIN_COMPACTION_LAG_MS_CONFIG, String.valueOf(100)); //Minimum time a message will remain uncompacted
+					topicConfig.put(TopicConfig.MAX_COMPACTION_LAG_MS_CONFIG, String.valueOf(100)); //Maximum time a message will remain uneligable for compaction
+					
 					topicConfig.put(TopicConfig.SEGMENT_MS_CONFIG, String.valueOf(100));//100 Milliseconds
+					topicConfig.put(TopicConfig.SEGMENT_BYTES_CONFIG, String.valueOf(100));//100 Milliseconds
+					
+					topicConfig.put(TopicConfig.DELETE_RETENTION_MS_CONFIG, String.valueOf(100)); //Retention time for deleted messages
 				}
-
-				
-				if (entityProperties.getRetentionPolicy() != null)
+				else
 				{
+					/**
+					 * Only applicable for delete RetentionPolicy not for compact.
+					 * Maximum time Kafka will retaina log before it will discard
+					 * old segments to free up space.
+					 */
 					topicConfig.put(TopicConfig.RETENTION_MS_CONFIG, String.valueOf(entityProperties.getRetentionPolicy().longValue()));
 				}
-
 				
 				// ParitionNo=0 implies we need to create 1 Partition
 				NewTopic newTopic = new NewTopic(topicName, entityProperties.getPartitionNo() + 1, entityProperties.getReplicationFactor());
