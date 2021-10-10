@@ -26,7 +26,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
@@ -128,7 +127,7 @@ public class MessagingServiceImpl implements MessagingService
 					topicConfig.put(TopicConfig.MIN_COMPACTION_LAG_MS_CONFIG, String.valueOf(100)); //100 Milliseconds
 					topicConfig.put(TopicConfig.MAX_COMPACTION_LAG_MS_CONFIG, String.valueOf(100)); //100 Milliseconds
 					topicConfig.put(TopicConfig.DELETE_RETENTION_MS_CONFIG, String.valueOf(100)); //100 Milliseconds
-					topicConfig.put(TopicConfig.SEGMENT_MS_CONFIG, String.valueOf(6000));//1 Minute
+					topicConfig.put(TopicConfig.SEGMENT_MS_CONFIG, String.valueOf(100));//100 Milliseconds
 				}
 
 				
