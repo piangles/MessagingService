@@ -100,15 +100,19 @@ public class MessagingServiceImpl implements MessagingService
 	    Set<String> currentTopicList = null;
 	    try
 		{
-		    ListTopicsResult topics = adminClient.listTopics();
+	    	long startTime = System.currentTimeMillis();
+		    
+	    	ListTopicsResult topics = adminClient.listTopics();
 			currentTopicList = topics.names().get();
+			
+			logger.info("Querying all Topics Count: " + currentTopicList.size() + " TimeTaken: " + (System.currentTimeMillis() - startTime) + " MilliSeconds.");
 		}
 		catch (Exception e) //InterruptedException & ExecutionException
 		{
 			logger.error("Failed to Query for ALL existing Topics. Reason: " + e.getMessage(), e);
 		}
 
-		
+	    long startTime = System.currentTimeMillis();
 		for (EntityProperties entityProperties : listOfEntityProperties)
 		{
 			String topicName = String.format(entityProperties.getTopicName(), entityId);
@@ -172,6 +176,8 @@ public class MessagingServiceImpl implements MessagingService
 				newTopics.add(newTopic);
 			}
 		}
+		logger.info("Creating newTopicsList Count: " + newTopics.size() + " TimeTaken: " + (System.currentTimeMillis() - startTime) + " MilliSeconds.");
+		
 		
 		if (newTopics.size() == 0)
 		{
@@ -179,6 +185,7 @@ public class MessagingServiceImpl implements MessagingService
 		}
 		else
 		{
+			startTime = System.currentTimeMillis();
 			try
 			{
 				CreateTopicsResult result = adminClient.createTopics(newTopics);
@@ -222,7 +229,8 @@ public class MessagingServiceImpl implements MessagingService
 					throw new MessagingException(message);
 				}
 			}
-			logger.info("Created topics for EntityType: " + entityType + " with EntityId: " + entityId + " successfuly.");
+			logger.info("Created topics for EntityType: " + entityType + " with EntityId: " + entityId + 
+						" successfully. TimeTaken: " + (System.currentTimeMillis() - startTime) + " MilliSecconds.");
 		}
 	}
 
