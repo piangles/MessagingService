@@ -20,6 +20,7 @@ package org.piangles.backbone.services.msg;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -87,7 +88,9 @@ public class MessagingServiceImpl implements MessagingService
 			adminClient = KafkaAdminClient.create(msgProperties);
 
 	    	ListTopicsResult topics = adminClient.listTopics();
-			currentTopicList = topics.names().get();
+			Set<String> tempCurrentTopicList = topics.names().get();
+			
+			currentTopicList = new HashSet<String>(tempCurrentTopicList);
 			
 			logger.info("Querying all Topics Count: " + currentTopicList.size() + " TimeTaken: " + (System.currentTimeMillis() - startTime) + " MilliSeconds.");
 		}
