@@ -201,6 +201,9 @@ public class MessagingServiceImpl implements MessagingService
 			}
 			finally
 			{
+				logger.info("Created topics for EntityType: " + entityType + " with EntityId: " + entityId + 
+							". TimeTaken: " + (System.currentTimeMillis() - startTime) + " MilliSecconds.");
+
 				try
 				{
 					adminClient.close();
@@ -212,6 +215,7 @@ public class MessagingServiceImpl implements MessagingService
 			}
 
 			// Persist in EntityTable all the topics
+			startTime = System.currentTimeMillis();
 			Topic topic = null;
 			for (EntityProperties entityProperties : listOfEntityProperties)
 			{
@@ -230,11 +234,11 @@ public class MessagingServiceImpl implements MessagingService
 					throw new MessagingException(message);
 				}
 			}
-			logger.info("Created topics for EntityType: " + entityType + " with EntityId: " + entityId + 
-						" successfully. TimeTaken: " + (System.currentTimeMillis() - startTime) + " MilliSecconds.");
+			logger.info("Persisted topics for EntityType: " + entityType + " with EntityId: " + entityId +  
+						". TimeTaken: " + (System.currentTimeMillis() - startTime) + " MilliSecconds.");
 		}
 		
-		logger.info("Total createTopicFor TimeTaken: " + (System.currentTimeMillis() - createTopicForstartTime) + " MilliSecconds.");
+		logger.info("Total createTopicFor for EntityType: " + entityType + " with EntityId: " + entityId + " TimeTaken: " + (System.currentTimeMillis() - createTopicForstartTime) + " MilliSecconds.");
 	}
 
 	/**
