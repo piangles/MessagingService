@@ -54,25 +54,60 @@ public class MessagingServiceImpl implements MessagingService
 	private MessagingDAO messagingDAO = null;
 	private Properties msgProperties = null;
 	private EntityConfiguration entityConfiguration = null;
-	private Map<String, PartitionerAlgorithm> topicPartitionAlgoMap = null;
 
+	
 	private KafkaProducer<String, String> kafkaProducer = null;
+
+	/**
+	 * Caches for perfomance - Eventually they should be moved to Redis
+	 */
+	private Set<String> currentTopicList = null;
 	private Map<String, Topic> topicMap = null;
 
 	public MessagingServiceImpl() throws Exception
 	{
 		messagingDAO = new MessagingDAOImpl();
-		topicPartitionAlgoMap = messagingDAO.retrievePartitionerAlgorithmForTopics();
-
+		
+		Map<String, PartitionerAlgorithm> topicPartitionAlgoMap = messagingDAO.retrievePartitionerAlgorithmForTopics();
 		ConfigProvider cp = new MsgConfigProvider(topicPartitionAlgoMap);
-
 		msgProperties = cp.getProperties();
+		
 		entityConfiguration = new EntityConfiguration(msgProperties);
 
 		KafkaMessagingSystem kms = ResourceManager.getInstance().getKafkaMessagingSystem(cp);
 		kafkaProducer = kms.createProducer();
 
 		topicMap = new HashMap<>();
+		
+		Admin adminClient = null;
+	    try
+		{
+	    	long startTime = System.currentTimeMillis();
+		    
+			adminClient = KafkaAdminClient.create(msgProperties);
+
+	    	ListTopicsResult topics = adminClient.listTopics();
+			currentTopicList = topics.names().get();
+			
+			logger.info("Querying all Topics Count: " + currentTopicList.size() + " TimeTaken: " + (System.currentTimeMillis() - startTime) + " MilliSeconds.");
+		}
+		catch (Exception e) //InterruptedException & ExecutionException
+		{
+			logger.error("Failed to Query for ALL existing Topics. Reason: " + e.getMessage(), e);
+			
+			throw e;
+		}
+		finally
+		{
+			try
+			{
+				adminClient.close();
+			}
+			catch (Exception e)
+			{
+				logger.error("Error closing AdminClient connection.");
+			}
+		}
 	}
 
 	/**
@@ -87,7 +122,7 @@ public class MessagingServiceImpl implements MessagingService
 	public void createTopicFor(String entityType, String entityId) throws MessagingException
 	{
 		long createTopicForstartTime = System.currentTimeMillis();
-		logger.info("Creating topics for EntityType: " + entityType + " with Id: " + entityId);
+		logger.info("Request to createTopicFor EntityType: " + entityType + " with Id: " + entityId);
 
 		List<EntityProperties> listOfEntityProperties = entityConfiguration.getEntityProperties(entityType);
 		if (listOfEntityProperties == null)
@@ -97,21 +132,6 @@ public class MessagingServiceImpl implements MessagingService
 
 		List<NewTopic> newTopics = new ArrayList<>();
 		Admin adminClient = KafkaAdminClient.create(msgProperties);
-
-	    Set<String> currentTopicList = null;
-	    try
-		{
-	    	long startTime = System.currentTimeMillis();
-		    
-	    	ListTopicsResult topics = adminClient.listTopics();
-			currentTopicList = topics.names().get();
-			
-			logger.info("Querying all Topics Count: " + currentTopicList.size() + " TimeTaken: " + (System.currentTimeMillis() - startTime) + " MilliSeconds.");
-		}
-		catch (Exception e) //InterruptedException & ExecutionException
-		{
-			logger.error("Failed to Query for ALL existing Topics. Reason: " + e.getMessage(), e);
-		}
 
 	    long startTime = System.currentTimeMillis();
 		for (EntityProperties entityProperties : listOfEntityProperties)
@@ -177,7 +197,7 @@ public class MessagingServiceImpl implements MessagingService
 				newTopics.add(newTopic);
 			}
 		}
-		logger.info("Creating newTopicsList Count: " + newTopics.size() + " TimeTaken: " + (System.currentTimeMillis() - startTime) + " MilliSeconds.");
+		logger.info("newTopicsList Count: " + newTopics.size() + " TimeTaken: " + (System.currentTimeMillis() - startTime) + " MilliSeconds.");
 		
 		
 		if (newTopics.size() == 0)
@@ -192,6 +212,11 @@ public class MessagingServiceImpl implements MessagingService
 				CreateTopicsResult result = adminClient.createTopics(newTopics);
 				KafkaFuture<Void> resultFuture = result.all();
 				resultFuture.get();
+				
+				for (NewTopic newTopic : newTopics)
+				{
+					currentTopicList.add(newTopic.name());
+				}
 			}
 			catch (Exception e)
 			{
