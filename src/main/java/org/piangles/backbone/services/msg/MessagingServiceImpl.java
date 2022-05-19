@@ -86,6 +86,7 @@ public class MessagingServiceImpl implements MessagingService
 	@Override
 	public void createTopicFor(String entityType, String entityId) throws MessagingException
 	{
+		long createTopicForstartTime = System.currentTimeMillis();
 		logger.info("Creating topics for EntityType: " + entityType + " with Id: " + entityId);
 
 		List<EntityProperties> listOfEntityProperties = entityConfiguration.getEntityProperties(entityType);
@@ -232,6 +233,8 @@ public class MessagingServiceImpl implements MessagingService
 			logger.info("Created topics for EntityType: " + entityType + " with EntityId: " + entityId + 
 						" successfully. TimeTaken: " + (System.currentTimeMillis() - startTime) + " MilliSecconds.");
 		}
+		
+		logger.info("Total createTopicFor TimeTaken: " + (System.currentTimeMillis() - createTopicForstartTime) + " MilliSecconds.");
 	}
 
 	/**
